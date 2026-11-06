@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>trust-ledger-ui</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="vendor/katex/katex.min.css">
+<link rel="stylesheet" href="style.css">
+<script src="vendor/katex/katex.min.js"></script>
+<script src="texlite.js"></script>
+<script src="diff.js"></script>
+<script src="app.js"></script>
+<script defer src="vendor/alpine/alpine.min.js"></script>
+</head>
+<body x-data="ledgerApp()">
+
+<header>
+  <div class="title"><b x-text="overview.project || 'ledger'"></b><span class="muted"> · trust-ledger-ui</span></div>
+  <label>Paper
+    <select x-model="scope" @change="selectScope()">
+      <template x-for="p in overview.papers" :key="p.name">
+        <option :value="p.name" x-text="p.name + (p.title ? ' — ' + p.title : '') + (p.state === 'loading' ? ' (loading…)' : p.state.startsWith('error') ? ' (error)' : '')"></option>
+      </template>
+      <option value="">all papers</option>
+    </select>
+  </label>
+  <template x-if="data">
+    <div class="chips">
+      <span class="chip none" x-text="data.counts.none + ' none'" title="claims without any attestation"></span>
+      <span class="chip stale" x-text="data.counts.stale + ' stale'" title="attested, but the statement or its evidence changed"></span>
+      <span class="chip ok" x-text="(data.counts.claims - data.counts.none - data.counts.stale) + ' current'"></span>
+      <span class="chip" x-text="data.counts.hypotheses_open + '/' + data.counts.hypotheses + ' hypotheses open'"></span>
+    </div>
+  </template>
+  <span class="editions" x-show="scopeInfo && scopeInfo.editions.length">
+    <template x-for="k in (scopeInfo ? scopeInfo.editions : [])"><a href="#" class="ref" @click.prevent="openEdition(k)" x-text="k === 'paper' ? 'PDF' : k"></a></template>
+  </span>
+  <div class="spacer"></div>
+  <span class="muted" x-show="overview.person" x-text="overview.person"></span>
+  <select @change="runKind($event.target.value); $event.target.value = ''" title="run a ledger.py command in the background">
+    <option value="">Run…</option>
+    <option value="verify">verify the lock file</option>
+    <option value="lock">write the lock file</option>
+    <option value="check">run the checks</option>
+    <option value="extract">extract Lean evidence (Docker)</option>
+  </select>
+  <button @click="jobsOpen = !jobsOpen; refreshJobs()">Jobs<span class="chip run" x-show="runningJobs" x-text="runningJobs + ' running'"></span></button>
+  <button @click="reload()" :disabled="loading">Reload</button>
+</header>
+
+<div class="banner warn" x-show="changed">Files changed on disk since this was loaded. <button @click="reload()">Reload now</button></div>
+<div class="banner err" x-show="error" x-text="error"></div>
+<div class="banner info" x-show="data && data.unsnapshotted && data.unsnapshotted.length" x-cloak>
+  <b x-text="data ? data.unsnapshotted.length : 0"></b> current attestation(s) have no snapshot of what they bind to, so a later change
+  cannot be shown as a diff. <button @click="recordSnapshots()" title="writes ledger/snapshots/&lt;bound&gt;.json (not hashed, not part of the root)">Record snapshots now</button>
+</div>
+
+<details class="messages" x-show="data && data.messages.length">
+  <summary x-text="data ? data.messages.length + ' ledger message(s)' : ''"></summary>
+  <ul><template x-for="m in (data ? data.messages : [])"><li x-text="m"></li></template></ul>
+</details>
+
+<div class="loading" x-show="loading">Loading the ledger (a few seconds the first time)…</div>
+
+<main x-show="data" x-cloak>
+  <section class="list">
+    <div class="tabs">
+      <button :class="{on: view === 'claims'}" @click="view = 'claims'">Claims</button>
+      <button :class="{on: view === 'hyps'}" @click="view = 'hyps'" title="key: t">Hypotheses
+        <span class="chip" x-text="data ? data.counts.hypotheses_open + '/' + data.counts.hypotheses + ' open' : ''"></span></button>
+    </div>
+    <div x-show="view === 'claims'">
+    <div class="toolbar">
+      <select x-model="filter" title="filter">
+        <option value="attention">needs attention (none + stale)</option>
+        <option value="all">all claims</option>
+        <option value="none">no attestation</option>
+        <option value="stale">stale</option>
+        <option value="current">current</option>
+        <option value="toolnotok">a tool is not ok</option>
+      </select>
+      <input type="search" x-model="search" placeholder="search name or label">
+      <span class="muted" x-text="rows.length + ' / ' + (data ? data.claims.length : 0)"></span>
+    </div>
+    <div class="toolbar selbar">
+      <select @change="selectBy($event.target.value); $event.target.value = ''" title="select claims">
+        <option value="">Select…</option>
+        <option value="shown">all shown</option>
+        <option value="stale">all stale</option>
+        <option value="none">all without attestation</option>
+        <option value="unseen">shown, not yet seen</option>
+        <option value="clear">clear selection</option>
+      </select>
+      <span class="muted" x-text="selected.length + ' selected, ' + selectedSeen + ' seen'"></span>
+      <button @click="nextUnseen()" :disabled="!unseenSelected.length" title="open the next selected claim you have not marked as seen">Next unseen</button>
+      <button @click="startPack(selected)" :disabled="!selected.length || !scope" :title="scope ? 'build one review pack for the selected claims' : 'select a single paper first'">Review pack</button>
+      <span class="spacer"></span>
+      <button class="primary" @click="openAttest(selected)" :disabled="!selected.length" x-text="'Attest ' + selected.length + ' selected…'"></button>
+    </div>
+    <div class="tablewrap">
+    <table>
+      <thead><tr>
+        <th class="cb"><input type="checkbox" :checked="allShownSelected" @change="toggleShown($event.target.checked)" title="select all shown"></th>
+        <th @click="sortBy('name')">claim</th>
+        <th @click="sortBy('attention')">attestation</th>
+        <th class="opt" @click="sortBy('evidence')">evid</th>
+        <th class="opt" @click="sortBy('statement')">stmt</th>
+        <template x-for="t in (data ? data.tools : [])"><th class="opt" x-text="t"></th></template>
+        <th class="opt" @click="sortBy('register')" title="size of the register">reg</th>
+      </tr></thead>
+      <tbody>
+        <template x-for="c in rows" :key="c.name">
+          <tr :class="{sel: current === c.name}" @click="open(c.name)">
+            <td class="cb" @click.stop><input type="checkbox" :checked="selected.includes(c.name)" @change="toggleSel(c.name)"></td>
+            <td class="name"><span x-text="c.name"></span><span class="seenmark" x-show="seen(c.name)" title="marked as seen"> ✓</span></td>
+            <td><span class="att" :class="c.attention" x-text="attLabel(c)"></span></td>
+            <td class="opt" x-text="c.evidence"></td>
+            <td class="opt" x-text="c.statement"></td>
+            <template x-for="t in data.tools"><td class="opt" :class="toolClass(c, t)" x-text="toolText(c, t)"></td></template>
+            <td class="opt" x-text="c.register"></td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+    </div>
+    </div>
+    <div x-show="view === 'hyps'" class="hyplist">
+      <p class="muted pad" x-show="data && !data.hypotheses.length">No hypotheses in this scope.</p>
+      <table x-show="data && data.hypotheses.length">
+        <thead><tr><th>hypothesis</th><th>label</th><th>status</th><th>cites</th></tr></thead>
+        <tbody><template x-for="x in (data ? data.hypotheses : [])" :key="x.name">
+          <tr :class="{sel: currentHyp === x.name}" @click="openHyp(x.name)">
+            <td class="name"><span x-text="x.name"></span><span class="seenmark" x-show="seen(x.name, 'hypothesis')"> ✓</span></td>
+            <td x-text="x.label || '—'"></td>
+            <td><span class="att" :class="hypClass(x)" x-text="hypStatus(x)"></span></td>
+            <td x-text="x.cites.length"></td>
+          </tr></template></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="detail" id="detail-hyp" x-show="view === 'hyps'">
+    <template x-if="hypDetail">
+      <article>
+        <h2><span x-text="hypDetail.name"></span> <span class="att" :class="hypClass(hypDetail)" x-text="hypStatus(hypDetail)"></span></h2>
+        <p class="actions">
+          <button @click="toggleSeen(hypDetail.name, 'hypothesis')" :class="{on: seen(hypDetail.name, 'hypothesis')}" title="key: v">
+            <span x-text="seen(hypDetail.name, 'hypothesis') ? '✓ Seen' : 'Mark as seen'"></span></button>
+          <button class="primary" @click="openAttest([hypDetail.name], 'hypothesis')" title="key: a">Attest as a known theorem…</button>
+        </p>
+        <p class="meta"><span x-show="hypDetail.paper">paper <b x-text="hypDetail.paper"></b> · </span>
+          <span x-show="hypDetail.label">label <b x-text="hypDetail.label"></b> · </span>
+          statement from <b x-text="hypDetail.source"></b> · bound <code x-text="hypDetail.bound.slice(0, 12)"></code></p>
+        <h3>Statement</h3>
+        <div class="tex" x-html="hypRendered.html"></div>
+        <h3>Cited sources</h3>
+        <p class="muted" x-show="!hypDetail.cites.length">none recorded</p>
+        <ul class="plain"><template x-for="c in hypDetail.cites" :key="c.key">
+          <li><b x-text="c.key"></b>
+            <span class="muted" x-show="!c.defined"> (no [citation.…] entry in the ledger)</span>
+            <template x-if="c.source && /^https?:\/\//.test(c.source)"><a class="ref" :href="c.source" target="_blank" rel="noopener noreferrer" x-text="c.source"></a></template>
+            <span x-show="c.source && !/^https?:\/\//.test(c.source)" x-text="c.source"></span></li></template></ul>
+        <h3>What attesting it means</h3>
+        <p class="muted">A green attestation says: this is a known theorem. The checklist items you tick are part of what is signed.</p>
+        <ul class="plain"><template x-for="(t, id) in hypDetail.checklist"><li><b x-text="id"></b> <span x-text="t"></span></li></template></ul>
+        <h3>Attestations</h3>
+        <p class="muted" x-show="!hypDetail.attestations.length">none</p>
+        <ul class="plain"><template x-for="a in hypDetail.attestations">
+          <li><span class="att" :class="a.current ? 'ok' : 'stale'" x-text="a.level + (a.current ? '' : ' · STALE')"></span>
+            <span x-text="a.person + ', ' + a.date"></span></li></template></ul>
+
+        <template x-if="diffView">
+          <div class="diffbox">
+            <h3>What changed since the attestation</h3>
+            <p class="muted" x-show="diffView.att">Compared with the attestation <b x-text="diffView.att ? diffView.att.level : ''"></b> by
+              <b x-text="diffView.att ? diffView.att.person : ''"></b> on <span x-text="diffView.att ? diffView.att.date : ''"></span>
+              (bound to <code x-text="diffView.att ? diffView.att.bound.slice(0, 12) : ''"></code>).</p>
+            <p class="muted" x-show="!diffView.available" x-text="diffView.reason"></p>
+            <p class="muted" x-show="diffView.available && diffView.current">Nothing changed: that attestation is current.</p>
+            <template x-if="diffView.available && !diffView.current">
+              <div>
+                <p x-show="!diffView.textChanged" class="muted">The statement text is unchanged.</p>
+                <div x-show="diffView.textChanged" class="diff" x-html="diffView.textHtml"></div>
+                <template x-for="u in diffView.uses" :key="u.name">
+                  <div><b>uses </b><a class="ref" href="#" @click.prevent="gotoClaim(u.name)" x-text="u.name"></a> <span class="muted" x-text="u.change"></span>
+                    <div class="diff" x-show="u.html" x-html="u.html"></div></div>
+                </template>
+                <template x-for="n in diffView.nodes" :key="n.id">
+                  <details class="node">
+                    <summary><code x-text="n.id"></code> <span class="att stale" x-text="n.change"></span>
+                      <span class="muted" x-show="n.same">a dependency of it changed</span></summary>
+                    <template x-for="f in n.fields" :key="f.key"><div><b x-text="f.key"></b><div class="diff" x-html="f.html"></div></div></template>
+                    <p class="muted" x-show="!n.fields.length">its own content is identical; one of the declarations or inputs it rests on changed</p>
+                  </details>
+                </template>
+                <p class="muted" x-show="!diffView.nodes.length && !diffView.uses.length && !diffView.textChanged">The hash differs, but no recorded part of it does (for instance the evidence specification changed in a way the snapshot does not show).</p>
+              </div>
+            </template>
+          </div>
+        </template>
+
+        <h3>Results that are proved given it</h3>
+        <p><span class="muted" x-show="!hypDetail.used_by.length">none</span>
+          <template x-for="n in hypDetail.used_by"><a class="ref" href="#" @click.prevent="gotoClaim(n)" x-text="n"></a></template></p>
+      </article>
+    </template>
+    <p class="muted" x-show="currentHyp && !hypDetail">Loading…</p>
+    <p class="muted" x-show="!currentHyp">Select a hypothesis.</p>
+  </section>
+
+  <section class="detail" id="detail-claim" x-show="view === 'claims' && current">
+    <template x-if="detail">
+      <article>
+        <h2><span x-text="detail.name"></span>
+          <span class="att" :class="detailAttention" x-text="detailAttentionText"></span></h2>
+        <p class="actions">
+          <button @click="toggleSeen(detail.name)" :class="{on: seen(detail.name)}" title="key: v">
+            <span x-text="seen(detail.name) ? '✓ Seen' : 'Mark as seen'"></span></button>
+          <button @click="startPack([detail.name], detail.paper)" title="build a review pack for this claim and what it rests on">Review pack</button>
+          <button class="primary" @click="openAttest([detail.name])" title="key: a">Attest…</button>
+        </p>
+        <p class="meta">
+          <span x-show="detail.paper">paper <b x-text="detail.paper"></b> · </span>
+          <span x-show="detail.labels.length">label <b x-text="detail.labels.join(', ')"></b> · </span>
+          evidence <b x-text="detail.evidence"></b> ·
+          <template x-for="(w, t) in detail.tools"><span><span x-text="t"></span> <b x-text="w"></b> · </span></template>
+          bound <code x-text="detail.bound.slice(0, 12)"></code>
+        </p>
+
+        <h3>Paper statement <small class="muted" x-text="'(' + detail.source + ')'"></small></h3>
+        <div class="tex" x-html="rendered.statement.html"></div>
+
+        <template x-if="rendered.reading">
+          <div>
+            <h3>Back-translation of the Lean statement <small class="muted" x-text="detail.reading_file"></small></h3>
+            <div class="tex" x-html="rendered.reading.html"></div>
+          </div>
+        </template>
+        <template x-if="detail.extract">
+          <details>
+            <summary>Lean statement <small class="muted" x-text="detail.extract_file"></small></summary>
+            <pre class="lean" x-text="detail.extract"></pre>
+          </details>
+        </template>
+        <p class="renderwarn" x-show="renderIssues.length">
+          <b x-text="renderIssues.length"></b> formula(s) could not be rendered and are shown as source:
+          <template x-for="f in renderIssues"><code x-text="f.source.slice(0, 60)" :title="f.error"></code></template>
+        </p>
+
+        <h3>Attestations</h3>
+        <p class="muted" x-show="!detail.attestations.length">none</p>
+        <ul class="plain">
+          <template x-for="a in detail.attestations">
+            <li><span class="att" :class="a.current ? 'ok' : 'stale'" x-text="a.level + (a.current ? '' : ' · STALE')"></span>
+              <span x-text="a.person + ', ' + a.date"></span></li>
+          </template>
+        </ul>
+
+
+        <template x-if="diffView">
+          <div class="diffbox">
+            <h3>What changed since the attestation</h3>
+            <p class="muted" x-show="diffView.att">Compared with the attestation <b x-text="diffView.att ? diffView.att.level : ''"></b> by
+              <b x-text="diffView.att ? diffView.att.person : ''"></b> on <span x-text="diffView.att ? diffView.att.date : ''"></span>
+              (bound to <code x-text="diffView.att ? diffView.att.bound.slice(0, 12) : ''"></code>).</p>
+            <p class="muted" x-show="!diffView.available" x-text="diffView.reason"></p>
+            <p class="muted" x-show="diffView.available && diffView.current">Nothing changed: that attestation is current.</p>
+            <template x-if="diffView.available && !diffView.current">
+              <div>
+                <p x-show="!diffView.textChanged" class="muted">The statement text is unchanged.</p>
+                <div x-show="diffView.textChanged" class="diff" x-html="diffView.textHtml"></div>
+                <template x-for="u in diffView.uses" :key="u.name">
+                  <div><b>uses </b><a class="ref" href="#" @click.prevent="gotoClaim(u.name)" x-text="u.name"></a> <span class="muted" x-text="u.change"></span>
+                    <div class="diff" x-show="u.html" x-html="u.html"></div></div>
+                </template>
+                <template x-for="n in diffView.nodes" :key="n.id">
+                  <details class="node">
+                    <summary><code x-text="n.id"></code> <span class="att stale" x-text="n.change"></span>
+                      <span class="muted" x-show="n.same">a dependency of it changed</span></summary>
+                    <template x-for="f in n.fields" :key="f.key"><div><b x-text="f.key"></b><div class="diff" x-html="f.html"></div></div></template>
+                    <p class="muted" x-show="!n.fields.length">its own content is identical; one of the declarations or inputs it rests on changed</p>
+                  </details>
+                </template>
+                <p class="muted" x-show="!diffView.nodes.length && !diffView.uses.length && !diffView.textChanged">The hash differs, but no recorded part of it does (for instance the evidence specification changed in a way the snapshot does not show).</p>
+              </div>
+            </template>
+          </div>
+        </template>
+
+        <h3>Uses / used by</h3>
+        <p>
+          <span class="muted" x-show="!detail.uses.length && !detail.used_by.length">nothing</span>
+          <template x-for="u in detail.uses"><a class="ref" href="#" @click.prevent="open(u)" x-text="'↑ ' + u"></a></template>
+          <template x-for="u in detail.used_by"><a class="ref" href="#" @click.prevent="open(u)" x-text="'↓ ' + u"></a></template>
+        </p>
+
+        <details>
+          <summary>Rests on <span class="muted" x-text="'(' + detail.rests_on.length + ')'"></span></summary>
+          <table class="small"><template x-for="r in detail.rests_on"><tr><td x-text="r.provenance"></td><td x-text="r.id"></td></tr></template></table>
+          <p class="muted" x-show="detail.recorded.length" x-text="detail.recorded.length + ' more recorded in the root but not bound by an attestation'"></p>
+        </details>
+        <p class="muted" x-show="detail.register.length">register: <span x-text="detail.register.join(', ')"></span></p>
+      </article>
+    </template>
+    <p class="muted" x-show="current && !detail">Loading…</p>
+  </section>
+  <section class="detail empty" x-show="view === 'claims' && !current"><p class="muted">Select a claim.</p></section>
+</main>
+
+<section class="packview" x-show="packView" x-cloak>
+  <div class="packhead">
+    <b x-text="packView ? packView.heading : ''"></b>
+    <span class="muted" x-text="packView ? packView.label : ''"></span>
+    <span class="chip stale" x-show="packStale.length" x-text="'older than the statement of ' + packStale.join(', ')"></span>
+    <span class="spacer"></span>
+    <a class="ref" :href="packView ? packView.url : '#'" target="_blank" rel="noopener">Open in a new tab</a>
+    <button @click="closePack()">Close</button>
+  </div>
+  <iframe x-ref="packframe" :src="packView ? packView.url : 'about:blank'" title="review pack"></iframe>
+</section>
+
+<section class="jobs" x-show="jobsOpen" x-cloak>
+  <div class="jobshead"><b>Jobs</b><span class="muted"> background commands of ledger.py</span><span class="spacer"></span>
+    <button @click="jobsOpen = false">Hide</button></div>
+  <div class="jobsbody">
+    <table class="small">
+      <tbody>
+        <template x-for="j in jobs" :key="j.id">
+          <tr :class="{sel: jobLog.id === j.id}">
+            <td x-text="j.kind + (j.paper ? ' · ' + j.paper : '')"></td>
+            <td><span class="att" :class="j.state === 'done' ? 'ok' : j.state === 'running' || j.state === 'cancelling' ? 'stale' : 'none'" x-text="j.state"></span></td>
+            <td class="muted" x-text="Math.round(j.elapsed) + ' s'"></td>
+            <td><a href="#" class="ref" @click.prevent="viewLog(j.id)">log</a>
+                <a href="#" class="ref" x-show="j.pack" @click.prevent="openPack(j.id)">open pack</a>
+                <a href="#" class="ref" x-show="j.state === 'running'" @click.prevent="cancelJob(j.id)">cancel</a></td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+    <p class="muted" x-show="!jobs.length">No jobs yet in this session.</p>
+    <pre class="joblog" x-show="jobLog.id" x-text="jobLog.lines.join('\n')" x-ref="joblog"></pre>
+  </div>
+</section>
+
+
+<dialog class="attest" x-effect="dlg.open ? (!$el.open && $el.showModal()) : ($el.open && $el.close())"
+        @cancel.prevent="dlg.state !== 'running' && closeAttest()" @close="dlg.open = false">
+  <form method="dialog" @submit.prevent>
+    <h2>Attest <span class="muted" x-text="dlg.targets.length + ' ' + dlg.kind + (dlg.targets.length === 1 ? '' : 's')"></span></h2>
+    <p class="targets"><template x-for="t in dlg.targets"><span class="ref"><span x-text="t"></span><span x-show="seen(t, dlg.kind)"> ✓</span></span></template></p>
+    <div class="banner err" x-show="dlg.error" x-text="dlg.error"></div>
+
+    <template x-if="dlg.state === 'edit' || dlg.state === 'review'">
+      <div class="fields">
+        <label>Level
+          <select x-model="dlg.level" @change="edited()">
+            <template x-for="l in (dlg.opts ? dlg.opts.levels : [])"><option :value="l" x-text="l"></option></template>
+          </select>
+        </label>
+        <label>Reason <span class="muted" x-show="dlg.level === 'yellow'">(required for yellow)</span>
+          <textarea rows="3" x-model="dlg.reason" @input="edited()"></textarea>
+        </label>
+        <div class="templates" x-show="dlg.opts && (dlg.opts.reasons.length || dlg.opts.recent_reasons.length)">
+          <span class="muted">templates:</span>
+          <template x-for="r in (dlg.opts ? dlg.opts.reasons : [])"><a href="#" class="ref tpl" :title="r" @click.prevent="useReason(r)" x-text="r"></a></template>
+          <template x-for="r in (dlg.opts ? dlg.opts.recent_reasons : [])"><a href="#" class="ref tpl" :title="r" @click.prevent="useReason(r)" x-text="r"></a></template>
+        </div>
+        <fieldset x-show="claimChecklist.length"><legend>Checklist (part of what is signed)</legend>
+          <template x-for="[id, item] in claimChecklist" :key="id">
+            <label class="check"><input type="checkbox" :checked="dlg.checklist.includes(id)" @change="toggleChecklist(id)">
+              <b x-text="id"></b> <span x-text="item.text"></span></label>
+          </template>
+        </fieldset>
+        <label>Key
+          <select x-model="dlg.key" @change="edited()">
+            <template x-for="k in (dlg.opts ? dlg.opts.keys : [])"><option :value="k.id" x-text="k.id + ' — ' + k.person + (k.in_agent ? '' : ' (not in agent)')"></option></template>
+          </select>
+        </label>
+        <p class="banner warn" x-show="keyInfo && !keyInfo.in_agent">
+          This key is not loaded in your ssh-agent. Run <code>ssh-add</code> for it, then press Review again.
+          <span x-show="dlg.opts && !dlg.opts.agent.available" x-text="dlg.opts ? dlg.opts.agent.message : ''"></span></p>
+      </div>
+    </template>
+
+    <template x-if="dlg.state === 'review' && dlg.preview">
+      <div class="review">
+        <h3>What will be signed</h3>
+        <p class="muted">One signature per claim by <b x-text="dlg.preview.person"></b>, key <code x-text="dlg.preview.key"></code>
+          (<code x-text="dlg.preview.fingerprint"></code>). If your ssh-agent asks for a confirmation per signature, expect
+          <b x-text="dlg.preview.signatures"></b> prompt(s).</p>
+        <p>Level <b x-text="dlg.preview.level"></b><span x-show="dlg.preview.checklist.length">, checklist <b x-text="dlg.preview.checklist.join(', ')"></b></span>. Reason:</p>
+        <pre class="reason" x-text="dlg.preview.reason || '(none)'"></pre>
+        <table class="small">
+          <thead><tr><th x-text="dlg.kind"></th><th>now</th><th>bound to</th><th>seen</th><th></th></tr></thead>
+          <tbody><template x-for="i in dlg.preview.items" :key="i.target">
+            <tr><td x-text="i.target"></td>
+              <td x-text="i.current.length ? i.current.map(c => c.level + (c.current ? '' : ' (stale)')).join(', ') : 'none'"></td>
+              <td><code x-text="i.bound.slice(0, 12)"></code></td>
+              <td x-text="seen(i.target, dlg.kind) ? 'yes' : 'NO'" :class="{bad: !seen(i.target, dlg.kind)}"></td>
+              <td class="bad" x-text="i.ok ? '' : i.problem"></td></tr>
+          </template></tbody>
+        </table>
+        <div class="banner warn" x-show="unseen.length">
+          <b x-text="unseen.length"></b> of <span x-text="dlg.targets.length"></span> claim(s) are not marked as seen:
+          <span x-text="unseen.join(', ')"></span>.
+          <label class="check"><input type="checkbox" x-model="dlg.ack"> I am attesting claims I have not marked as seen.</label>
+        </div>
+        <div class="banner err" x-show="!dlg.preview.key_in_agent">The key is not loaded in the ssh-agent; nothing can be signed yet.</div>
+      </div>
+    </template>
+
+    <template x-if="dlg.job">
+      <div class="job">
+        <h3 x-text="dlg.state === 'running' ? 'Signing… (confirm in your ssh-agent if it asks)' : dlg.state === 'done' ? 'Done' : 'Stopped'"></h3>
+        <p class="banner err" x-show="dlg.job.message" x-text="dlg.job.message"></p>
+        <table class="small"><template x-for="r in dlg.job.results" :key="r.target">
+          <tr><td x-text="r.target"></td><td><span class="att" :class="statusClass(r.status)" x-text="r.status"></span></td><td class="muted" x-text="r.message"></td></tr>
+        </template></table>
+        <p class="muted" x-show="dlg.undone" x-text="dlg.undone"></p>
+      </div>
+    </template>
+
+    <div class="buttons">
+      <button type="button" @click="undoLast()" x-show="dlg.state === 'done' && !dlg.undone" title="removes the records of this batch from attestations.toml, if nothing else changed that file">Undo this batch</button>
+      <span class="spacer"></span>
+      <button type="button" @click="closeAttest()" :disabled="dlg.state === 'running'" x-text="dlg.state === 'done' || dlg.state === 'failed' ? 'Close' : 'Cancel'"></button>
+      <button type="button" class="primary" x-show="dlg.state === 'edit'" @click="reviewAttest()"
+              :disabled="!dlg.key || (dlg.level === 'yellow' && !dlg.reason.trim())">Review</button>
+      <button type="button" class="primary" x-show="dlg.state === 'review'" :disabled="!canSign" @click="signAttest()"
+              x-text="'Sign ' + (dlg.preview ? dlg.preview.signatures : 0) + ' attestation(s)'"></button>
+    </div>
+  </form>
+</dialog>
+
+</body>
+</html>
