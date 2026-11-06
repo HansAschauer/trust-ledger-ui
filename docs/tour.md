@@ -40,6 +40,11 @@ whether it is still valid:
 | **outdated** | it judged an older state: the statement or something it rests on changed, or the back-translation was redone. Read the verdict as describing that older state |
 | **unbound** | it was written before assessments recorded what they judged, so nothing can be said. `ledger.py assess CLAIM --bind` states that it still fits |
 
+For an **unbound** assessment in a project under git, the page compares with the history (a few seconds, once per paper): it
+shows *From git: since it was written these changed: paper statement, back-translation …*, or that none of the paper
+statement, the Lean references, the Lean extract and the back-translation changed (*probably still describes the claim*, which
+only you can confirm). The same list is `ledger.py assess --audit`; `--bind-unchanged` binds the unchanged ones.
+
 The list filter *assessment outdated or unbound* collects the claims to look at. A new assessment is recorded with
 `ledger.py assess CLAIM --verdict … --model … --notes-file …`, which stores the state it judged.
 

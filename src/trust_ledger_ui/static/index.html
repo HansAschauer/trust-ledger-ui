@@ -273,8 +273,20 @@
               <span class="att" :class="{current:'ok', outdated:'none', unbound:'stale'}[detail.assessment.state]" x-text="detail.assessment.state"
                     :title="{current:'it names the present statement', outdated:'it judged an older state', unbound:'it does not record what it judged'}[detail.assessment.state]"></span></p>
             <p class="banner warn" x-show="detail.assessment.state === 'outdated'">Outdated: <span x-text="detail.assessment.why.join('; ')"></span>. Read the verdict as describing an older state.</p>
-            <p class="muted" x-show="detail.assessment.state === 'unbound'">Written before assessments recorded what they judged, so it may no longer fit.
-              <code>ledger.py assess <span x-text="detail.name"></span> --bind</code> says it still does.</p>
+            <div x-show="detail.assessment.state === 'unbound'">
+              <p class="muted">Written before assessments recorded what they judged, so it may no longer fit.
+                <code>ledger.py assess <span x-text="detail.name"></span> --bind</code> says it still does.</p>
+              <p x-show="auditRow" :class="auditRow && auditRow.state === 'changed' ? 'banner warn' : 'muted'">
+                <b>From git:</b>
+                <span x-show="auditRow && auditRow.state === 'changed'">since it was written (<span x-text="auditRow ? auditRow.date : ''"></span>) these changed:
+                  <b x-text="auditRow ? auditRow.changes.join(', ') : ''"></b>. A new assessment is due.</span>
+                <span x-show="auditRow && auditRow.state === 'unchanged'">none of the paper statement, the Lean references, the Lean extract and the back-translation changed since it was written
+                  (<span x-text="auditRow ? auditRow.date : ''"></span>): probably still describes the claim.</span>
+                <span x-show="auditRow && auditRow.state === 'unknown'" x-text="auditRow ? auditRow.note : ''"></span>
+              </p>
+              <p class="muted" x-show="auditLoading">comparing with the git history…</p>
+              <p class="muted" x-show="auditMsg" x-text="auditMsg"></p>
+            </div>
             <div class="tex" x-show="rendered.assessment" x-html="rendered.assessment ? rendered.assessment.html : ''"></div>
           </div>
         </template>

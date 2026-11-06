@@ -6,7 +6,7 @@ function ledgerApp() {
     loading: false, error: '', changed: false,
     filter: 'attention', search: '', sortKey: 'attention', sortDir: 1,
     current: '', detail: null, rendered: { statement: { html: '' }, reading: null }, renderIssues: [],
-    macroCache: {}, recovering: false, recoverMsg: '', diffView: null, view: 'claims', currentHyp: '', hypDetail: null, hypRendered: null, selected: [], jobs: [], jobsOpen: false, jobLog: { id: null, lines: [], next: 0 }, packView: null,
+    macroCache: {}, auditRows: null, auditScope: null, auditLoading: false, auditMsg: '', recovering: false, recoverMsg: '', diffView: null, view: 'claims', currentHyp: '', hypDetail: null, hypRendered: null, selected: [], jobs: [], jobsOpen: false, jobLog: { id: null, lines: [], next: 0 }, packView: null,
 
     async init() {
       const h = location.hash.slice(1);
@@ -50,7 +50,7 @@ function ledgerApp() {
     },
 
     async selectScope() {
-      localStorage.setItem('tlui-scope', this.scope);
+      localStorage.setItem('tlui-scope', this.scope); this.auditRows = null;
       this.current = ''; this.detail = null; this.currentHyp = ''; this.hypDetail = null; this.selected = []; this.link();
       await this.loadScope();
     },
@@ -62,6 +62,7 @@ function ledgerApp() {
       this.refreshOverview();
     },
     async reload() {
+      this.auditRows = null;
       this.loading = true;
       try { await this.api('/api/reload' + this.q(), 'POST'); } catch (e) { /* GET below reports */ }
       this.macroCache = {};
@@ -140,6 +141,7 @@ function ledgerApp() {
         this.renderIssues = issues;
         this.detail = d;
         this.loadDiff('claim', name, d.attestations);
+        if (d.assessment && d.assessment.state === 'unbound') this.loadAudit();
         if (window.innerWidth <= 900) document.querySelector('#detail-claim').scrollIntoView();
       } catch (e) { this.error = e.message; }
     },
@@ -284,6 +286,21 @@ function ledgerApp() {
       } catch (e) { this.dlg.error = e.message; }
     },
     // ---- background jobs and review packs (SPEC.md sections 7 and 8)
+    // ---- unbound assessments: what changed since they were written, from git (once per scope, a few seconds)
+    get auditRow() {
+      return this.auditRows && this.detail ? this.auditRows.find(r => r.claim === this.detail.name) || null : null;
+    },
+    async loadAudit() {
+      if (this.auditScope === this.scope && this.auditRows) return;
+      this.auditLoading = true; this.auditMsg = '';
+      try {
+        const r = await this.api('/api/assessments/audit' + this.q());
+        this.auditRows = r.rows.filter(x => x.claim); this.auditScope = this.scope;
+        if (r.rows.some(x => x.state === 'no git')) this.auditMsg = 'No git history to compare with.';
+      } catch (e) { this.auditMsg = 'The comparison with git failed: ' + e.message; }
+      this.auditLoading = false;
+    },
+
     // ---- what changed since the attestation (SPEC.md section 5.3)
     async loadDiff(kind, name, atts) {
       if (!atts.some(x => !x.current)) return;               // nothing stale: nothing to explain

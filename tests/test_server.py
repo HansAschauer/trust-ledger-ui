@@ -221,3 +221,10 @@ def test_assessment_in_the_detail_and_recovery_from_git(app, egg):
     st, r = post(app, "/api/snapshots?paper=egg", {"from_git": True})
     assert st == 500 and "git" in r["error"]
     assert get(app, "/api/papers")[0] == 200
+
+
+def test_assessment_audit_endpoint(app):
+    st, body, _ = get(app, "/api/assessments/audit?paper=egg")
+    rows = json.loads(body)["rows"]
+    assert st == 200 and rows and rows[0]["state"] == "no git"                  # the scratch egg is not a repository
+    assert get(app, "/api/assessments/audit?paper=egg", token=None)[0] == 401

@@ -206,6 +206,8 @@ class App:
                     return h.send_json(self.project.diff(paper, "claim" if m.group(1) == "claims" else "hypothesis", m.group(2)))
                 except KeyError:
                     return h.send_error_json(HTTPStatus.NOT_FOUND, f"unknown {m.group(1)[:-1] if m.group(1) == 'claims' else 'hypothesis'} {m.group(2)}")
+            if method == "GET" and path == "/api/assessments/audit":
+                return h.send_json({"rows": self.project.audit_assessments(paper)})
             if method == "POST" and path == "/api/snapshots":
                 b = h.read_json() if h._body else {}
                 if b.get("from_git"):

@@ -170,6 +170,18 @@ class Project:
         self._cache.pop(paper or "", None)                    # the data says which targets lack a snapshot
         return done
 
+    def audit_assessments(self, paper: str | None) -> list[dict]:
+        """`ledger.py assess --audit`: for unbound assessments, what changed since they were written (from git). Takes seconds,
+        so it is kept until a file the ledger reads changes."""
+        e = self.load(paper)
+        if e.get("audit_stamp") != e["stamp"]:
+            try:
+                e["audit"] = e["L"].audit_assessments()
+            except self.tool.LedgerError as ex:
+                e["audit"] = [dict(claim="", state="no git", note=str(ex))]
+            e["audit_stamp"] = e["stamp"]
+        return e["audit"]
+
     def recover_snapshots(self, paper: str | None, partial: bool = False, dry_run: bool = False) -> list[dict]:
         """Rebuild the snapshots of stale attestations from the project's git history (ledger.py `snapshot --from-git`)."""
         L = self.load(paper)["L"]
