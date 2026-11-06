@@ -49,3 +49,30 @@ available.
     one, may still hold the old text.
 
 Standalone attestation files (`ledger.py attest … --out`) and `attest --no-snapshot` write no snapshot.
+
+## Rebuilding snapshots from git
+
+!!! info "Prerequisites"
+    The project is a git repository, and the attestation was committed. `ledger.py` with `snapshot --from-git` (trust-ledger
+    from 2026-11-07).
+
+For a **stale** attestation without a snapshot, the text it bound to may still be in your git history. A second blue bar then
+offers **Rebuild from git** (on the command line: `ledger.py snapshot --from-git`; add `--dry-run` to only look). For each
+attestation the tool finds the commit that added it, unpacks the project as it was, loads it and recomputes the claim's
+hash there. A snapshot is written **only if that hash is exactly the attested one**, so what you get is provably what was
+attested.
+
+This works only if *everything the ledger reads* is in git. A generated file that is ignored, typically the Lean dump
+`ledger/lean.json`, is missing in the old state, the hash differs, and nothing is written. The bar then says how many could
+not be recovered. Two ways forward:
+
+- **… also text only** (`--partial`) keeps the statement text of the commit that added the attestation. It is marked as
+  **not verified** in the page, and only the statement is compared, not the evidence. Useful for seeing how a wording changed.
+- For the future: commit the dumps, or rely on the snapshots that are now written at every attestation.
+
+## Which commit was it?
+
+When a project is a git repository, every attestation also records the commit it was made at (`git_head`) and whether
+other tracked files differed from it (`git_dirty`). These two values are **not signed and not hashed**: they are a hint,
+because history can be rewritten. The diff shows them ("Attested at git commit …") together with the list of files that
+changed since, so you can continue with your usual `git diff <commit>`.

@@ -1,0 +1,11 @@
+# trust-ledger-ui: where the ledger is and who signs (docs: README.md of trust-ledger-ui)
+[ledger]
+file = "../quantum-shadow-maps_v2/ledger/ledger.toml"
+tool = "../trust-ledger/ledger.py"   # a trust-ledger ledger.py with the library API
+
+[signing]
+person = "Hans Aschauer"
+key = "hans"   # id in ledger/keys.toml; signs through ssh-agent
+
+[metadata]
+# paper_toml = "paper/{name}/paper.toml"   # titles and edition PDFs, if you have such files

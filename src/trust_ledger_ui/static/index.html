@@ -51,6 +51,14 @@
 
 <div class="banner warn" x-show="changed">Files changed on disk since this was loaded. <button @click="reload()">Reload now</button></div>
 <div class="banner err" x-show="error" x-text="error"></div>
+<div class="banner info" x-show="data && data.stale_unsnapshotted && data.stale_unsnapshotted.length" x-cloak>
+  <b x-text="data ? data.stale_unsnapshotted.length : 0"></b> stale attestation(s) have no snapshot, so what changed cannot be shown.
+  If the project is in git, it can be rebuilt from the history.
+  <button @click="recoverFromGit(false)" :disabled="recovering" title="exact: only what reproduces the attested hash is kept">Rebuild from git</button>
+  <button @click="recoverFromGit(true)" :disabled="recovering" title="also keep the statement text where the evidence is not in git; marked as unverified">… also text only</button>
+  <span class="muted" x-show="recovering">working (the project is loaded once per commit)…</span>
+  <span x-show="recoverMsg" x-text="recoverMsg"></span>
+</div>
 <div class="banner info" x-show="data && data.unsnapshotted && data.unsnapshotted.length" x-cloak>
   <b x-text="data ? data.unsnapshotted.length : 0"></b> current attestation(s) have no snapshot of what they bind to, so a later change
   cannot be shown as a diff. <button @click="recordSnapshots()" title="writes ledger/snapshots/&lt;bound&gt;.json (not hashed, not part of the root)">Record snapshots now</button>
@@ -79,6 +87,7 @@
         <option value="stale">stale</option>
         <option value="current">current</option>
         <option value="toolnotok">a tool is not ok</option>
+        <option value="assessold">assessment outdated or unbound</option>
       </select>
       <input type="search" x-model="search" placeholder="search name or label">
       <span class="muted" x-text="rows.length + ' / ' + (data ? data.claims.length : 0)"></span>
@@ -176,6 +185,10 @@
             <p class="muted" x-show="diffView.att">Compared with the attestation <b x-text="diffView.att ? diffView.att.level : ''"></b> by
               <b x-text="diffView.att ? diffView.att.person : ''"></b> on <span x-text="diffView.att ? diffView.att.date : ''"></span>
               (bound to <code x-text="diffView.att ? diffView.att.bound.slice(0, 12) : ''"></code>).</p>
+            <p class="muted" x-show="diffView.git">Attested at git commit <code x-text="diffView.git ? diffView.git.head.slice(0, 10) : ''"></code><span x-show="diffView.att && diffView.att.git_dirty"> (the tree had uncommitted changes)</span>.
+              <span x-show="diffView.git && diffView.git.error" x-text="diffView.git ? diffView.git.error : ''"></span></p>
+            <p class="banner warn" x-show="diffView.unverified">This comparison was rebuilt from git commit <code x-text="diffView.unverified ? diffView.unverified.commit.slice(0, 10) : ''"></code> and is
+              <b>not verified</b> against the attested hash; only the statement text is compared, not the evidence.</p>
             <p class="muted" x-show="!diffView.available" x-text="diffView.reason"></p>
             <p class="muted" x-show="diffView.available && diffView.current">Nothing changed: that attestation is current.</p>
             <template x-if="diffView.available && !diffView.current">
@@ -194,7 +207,11 @@
                     <p class="muted" x-show="!n.fields.length">its own content is identical; one of the declarations or inputs it rests on changed</p>
                   </details>
                 </template>
-                <p class="muted" x-show="!diffView.nodes.length && !diffView.uses.length && !diffView.textChanged">The hash differs, but no recorded part of it does (for instance the evidence specification changed in a way the snapshot does not show).</p>
+                <details class="node" x-show="diffView.git && !diffView.git.error && diffView.git.files.length">
+                  <summary>Files changed since that commit <span class="muted" x-text="diffView.git ? '(' + (diffView.git.files.length + diffView.git.more) + ')' : ''"></span></summary>
+                  <ul class="plain"><template x-for="f in (diffView.git ? diffView.git.files : [])"><li><code x-text="f"></code></li></template></ul>
+                </details>
+                <p class="muted" x-show="!diffView.nodes.length && !diffView.uses.length && !diffView.textChanged && !diffView.unverified">The hash differs, but no recorded part of it does (for instance the evidence specification changed in a way the snapshot does not show).</p>
               </div>
             </template>
           </div>
@@ -248,6 +265,20 @@
           <template x-for="f in renderIssues"><code x-text="f.source.slice(0, 60)" :title="f.error"></code></template>
         </p>
 
+        <template x-if="detail.assessment">
+          <div class="assessment">
+            <h3>Assessment <small class="muted">(by a model, an aid; not an attestation)</small></h3>
+            <p><span class="att" :class="{consistent:'ok', partial:'stale', check:'stale', mismatch:'none', unclear:'stale'}[detail.assessment.verdict] || 'stale'" x-text="detail.assessment.verdict"></span>
+              <span class="muted" x-text="detail.assessment.model + ', ' + detail.assessment.date"></span>
+              <span class="att" :class="{current:'ok', outdated:'none', unbound:'stale'}[detail.assessment.state]" x-text="detail.assessment.state"
+                    :title="{current:'it names the present statement', outdated:'it judged an older state', unbound:'it does not record what it judged'}[detail.assessment.state]"></span></p>
+            <p class="banner warn" x-show="detail.assessment.state === 'outdated'">Outdated: <span x-text="detail.assessment.why.join('; ')"></span>. Read the verdict as describing an older state.</p>
+            <p class="muted" x-show="detail.assessment.state === 'unbound'">Written before assessments recorded what they judged, so it may no longer fit.
+              <code>ledger.py assess <span x-text="detail.name"></span> --bind</code> says it still does.</p>
+            <div class="tex" x-show="rendered.assessment" x-html="rendered.assessment ? rendered.assessment.html : ''"></div>
+          </div>
+        </template>
+
         <h3>Attestations</h3>
         <p class="muted" x-show="!detail.attestations.length">none</p>
         <ul class="plain">
@@ -264,6 +295,10 @@
             <p class="muted" x-show="diffView.att">Compared with the attestation <b x-text="diffView.att ? diffView.att.level : ''"></b> by
               <b x-text="diffView.att ? diffView.att.person : ''"></b> on <span x-text="diffView.att ? diffView.att.date : ''"></span>
               (bound to <code x-text="diffView.att ? diffView.att.bound.slice(0, 12) : ''"></code>).</p>
+            <p class="muted" x-show="diffView.git">Attested at git commit <code x-text="diffView.git ? diffView.git.head.slice(0, 10) : ''"></code><span x-show="diffView.att && diffView.att.git_dirty"> (the tree had uncommitted changes)</span>.
+              <span x-show="diffView.git && diffView.git.error" x-text="diffView.git ? diffView.git.error : ''"></span></p>
+            <p class="banner warn" x-show="diffView.unverified">This comparison was rebuilt from git commit <code x-text="diffView.unverified ? diffView.unverified.commit.slice(0, 10) : ''"></code> and is
+              <b>not verified</b> against the attested hash; only the statement text is compared, not the evidence.</p>
             <p class="muted" x-show="!diffView.available" x-text="diffView.reason"></p>
             <p class="muted" x-show="diffView.available && diffView.current">Nothing changed: that attestation is current.</p>
             <template x-if="diffView.available && !diffView.current">
@@ -282,7 +317,11 @@
                     <p class="muted" x-show="!n.fields.length">its own content is identical; one of the declarations or inputs it rests on changed</p>
                   </details>
                 </template>
-                <p class="muted" x-show="!diffView.nodes.length && !diffView.uses.length && !diffView.textChanged">The hash differs, but no recorded part of it does (for instance the evidence specification changed in a way the snapshot does not show).</p>
+                <details class="node" x-show="diffView.git && !diffView.git.error && diffView.git.files.length">
+                  <summary>Files changed since that commit <span class="muted" x-text="diffView.git ? '(' + (diffView.git.files.length + diffView.git.more) + ')' : ''"></span></summary>
+                  <ul class="plain"><template x-for="f in (diffView.git ? diffView.git.files : [])"><li><code x-text="f"></code></li></template></ul>
+                </details>
+                <p class="muted" x-show="!diffView.nodes.length && !diffView.uses.length && !diffView.textChanged && !diffView.unverified">The hash differs, but no recorded part of it does (for instance the evidence specification changed in a way the snapshot does not show).</p>
               </div>
             </template>
           </div>

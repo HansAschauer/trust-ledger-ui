@@ -164,8 +164,8 @@ class Attestor:
                     try:
                         rec = L.make_attestation(pv.person, pv.level, **{pv.kind: t}, reason=pv.reason, checklist=pv.checklist)
                         L.sign_attestation(rec, pv.key, keyfile)
-                        text = (tool.toml_record("[[attestation]]", rec)).encode("utf-8")
-                        path = L.append_attestation(rec)
+                        path = L.append_attestation(rec)             # may add git_head / git_dirty to rec
+                        text = (tool.toml_record("[[attestation]]", rec)).encode("utf-8")   # exactly what was appended, for undo
                         appended.append((path, text))
                         self._result(job, i, "attested", f"{pv.level}, bound to {rec['bound'][:12]}")
                         self._log(job, pv, t, "attested", rec["bound"])

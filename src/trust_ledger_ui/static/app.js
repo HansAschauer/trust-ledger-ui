@@ -6,7 +6,7 @@ function ledgerApp() {
     loading: false, error: '', changed: false,
     filter: 'attention', search: '', sortKey: 'attention', sortDir: 1,
     current: '', detail: null, rendered: { statement: { html: '' }, reading: null }, renderIssues: [],
-    macroCache: {}, diffView: null, view: 'claims', currentHyp: '', hypDetail: null, hypRendered: null, selected: [], jobs: [], jobsOpen: false, jobLog: { id: null, lines: [], next: 0 }, packView: null,
+    macroCache: {}, recovering: false, recoverMsg: '', diffView: null, view: 'claims', currentHyp: '', hypDetail: null, hypRendered: null, selected: [], jobs: [], jobsOpen: false, jobLog: { id: null, lines: [], next: 0 }, packView: null,
 
     async init() {
       const h = location.hash.slice(1);
@@ -78,6 +78,7 @@ function ledgerApp() {
         if (this.filter === 'none' && c.attention !== 'none') return false;
         if (this.filter === 'stale' && c.attention !== 'stale') return false;
         if (this.filter === 'current' && c.attention !== 'ok') return false;
+        if (this.filter === 'assessold' && !(c.assessment && c.assessment.state !== 'current')) return false;
         if (this.filter === 'toolnotok' && !Object.values(c.tools).some(t => t.status !== 'ok' && t.status !== 'none')) return false;
         return !s || c.name.toLowerCase().includes(s) || c.labels.some(l => l.toLowerCase().includes(s));
       });
@@ -134,7 +135,8 @@ function ledgerApp() {
           issues.push(...r.failures);
           return r;
         };
-        this.rendered = { statement: run(d.statement), reading: d.reading ? run(d.reading) : null };
+        this.rendered = { statement: run(d.statement), reading: d.reading ? run(d.reading) : null,
+                          assessment: d.assessment && d.assessment.notes ? run(d.assessment.notes) : null };
         this.renderIssues = issues;
         this.detail = d;
         this.loadDiff('claim', name, d.attestations);
@@ -292,7 +294,8 @@ function ledgerApp() {
       } catch (e) { /* the diff is an aid; the page works without it */ }
     },
     buildDiff(d) {
-      const base = { available: d.available, current: !!d.current, att: d.attestation || null, reason: d.reason || '' };
+      const base = { available: d.available, current: !!d.current, att: d.attestation || null, reason: d.reason || '',
+                     git: d.git || null, unverified: d.unverified || null };
       if (!d.available || d.current) return base;
       return Object.assign(base, {
         textChanged: d.text.changed, textHtml: tldiff.toHtml(tldiff.diff(d.text.old, d.text.new)),
@@ -301,6 +304,18 @@ function ledgerApp() {
         nodes: d.nodes.map(n => ({ id: n.id, kind: n.kind, change: n.change, same: n.content_same,
           fields: tldiff.fields(n.old || {}, n.new || {}) })),
       });
+    },
+    async recoverFromGit(partial) {
+      this.recovering = true; this.recoverMsg = ''; this.error = '';
+      try {
+        const r = await this.api('/api/snapshots' + this.q(), 'POST', { from_git: true, partial });
+        const n = (s) => r.results.filter(x => x.status === s).length;
+        this.recoverMsg = n('recovered') + ' rebuilt exactly, ' + n('partial') + ' as text only, ' + n('not found') + ' not recoverable.';
+        await this.loadScope();
+        if (this.current) this.open(this.current);
+        if (this.currentHyp) this.openHyp(this.currentHyp);
+      } catch (e) { this.error = e.message; }
+      this.recovering = false;
     },
     async recordSnapshots() {
       try {

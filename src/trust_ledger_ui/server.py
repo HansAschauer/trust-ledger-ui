@@ -207,6 +207,10 @@ class App:
                 except KeyError:
                     return h.send_error_json(HTTPStatus.NOT_FOUND, f"unknown {m.group(1)[:-1] if m.group(1) == 'claims' else 'hypothesis'} {m.group(2)}")
             if method == "POST" and path == "/api/snapshots":
+                b = h.read_json() if h._body else {}
+                if b.get("from_git"):
+                    return h.send_json({"results": self.project.recover_snapshots(paper, partial=b.get("partial") is True,
+                                                                                  dry_run=b.get("dry_run") is True)})
                 return h.send_json({"recorded": self.project.record_snapshots(paper)})
             m = re.fullmatch(r"/api/hypotheses/([A-Za-z0-9_.:-]+)", path)
             if method == "GET" and m:

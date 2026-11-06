@@ -28,6 +28,21 @@ On a narrow screen only the claim and its attestation are shown.
 has them, the attestation history, what the claim uses and what uses it (click to jump), what it rests on, and, if it is
 stale, [what changed](snapshots.md).
 
+## Assessments
+
+If the ledger holds a model's **assessment** of a claim (a comparison of the paper text, the formal statement and its
+back-translation), the detail view shows its verdict and text, marked as *by a model, an aid; not an attestation*. A badge says
+whether it is still valid:
+
+| Badge | Meaning |
+|---|---|
+| **current** | it records the claim's present statement (and back-translation) as what it judged |
+| **outdated** | it judged an older state: the statement or something it rests on changed, or the back-translation was redone. Read the verdict as describing that older state |
+| **unbound** | it was written before assessments recorded what they judged, so nothing can be said. `ledger.py assess CLAIM --bind` states that it still fits |
+
+The list filter *assessment outdated or unbound* collects the claims to look at. A new assessment is recorded with
+`ledger.py assess CLAIM --verdict … --model … --notes-file …`, which stores the state it judged.
+
 ## Reading what is shown
 
 - **Attestation column.** The strongest *current* attestation, for instance `green +1` (one more by someone else) or

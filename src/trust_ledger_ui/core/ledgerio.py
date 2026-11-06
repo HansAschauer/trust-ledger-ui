@@ -142,6 +142,7 @@ class Project:
                     c["attention"] = attention(c)
                 d["counts"] = counts(d)
                 d["unsnapshotted"] = unsnapshotted(L, d)
+                d["stale_unsnapshotted"] = unsnapshotted(L, d, stale=True)
                 e = self._cache[key] = dict(L=L, data=d, stamp=stamp)
             return e
 
@@ -169,6 +170,17 @@ class Project:
         self._cache.pop(paper or "", None)                    # the data says which targets lack a snapshot
         return done
 
+    def recover_snapshots(self, paper: str | None, partial: bool = False, dry_run: bool = False) -> list[dict]:
+        """Rebuild the snapshots of stale attestations from the project's git history (ledger.py `snapshot --from-git`)."""
+        L = self.load(paper)["L"]
+        try:
+            res = L.recover_snapshots(partial=partial, dry_run=dry_run)
+        except self.tool.LedgerError as ex:
+            raise ToolError(str(ex)) from ex
+        if not dry_run:
+            self._cache.pop(paper or "", None)
+        return res
+
     def hypothesis_detail(self, paper: str | None, name: str) -> dict:
         e = self.load(paper)
         try:
@@ -184,13 +196,16 @@ class Project:
             raise KeyError(claim) from ex
 
 
-def unsnapshotted(L, d: dict) -> list[str]:
-    """Targets with a current attestation but no snapshot: a later change to them could not be shown as a diff."""
-    out = [c["name"] for c in d["claims"] if c["bound"] and any(a["current"] for a in c["attestations"])
-           and not L.snapshot_path(c["bound"]).exists()]
-    out += ["hypothesis " + h["name"] for h in d["hypotheses"] if h["bound"] and any(a["current"] for a in h["attestations"])
-            and not L.snapshot_path(h["bound"]).exists()]
-    return out
+def unsnapshotted(L, d: dict, stale: bool = False) -> list[str]:
+    """Targets with an attestation but no snapshot of what it bound to. Current ones can still be recorded (a later change could
+    then be shown as a diff); stale ones (stale=True) only by rebuilding from git history."""
+    def lacks(x):
+        atts = x["attestations"]
+        hit = any(a["current"] for a in atts) if not stale else (bool(atts) and not any(a["current"] for a in atts))
+        return bool(x["bound"]) and hit and (not L.snapshot_path(x["bound"]).exists() if not stale else
+                                              not any(L.snapshot_path(b).exists() for b in {a.get("bound") for a in L.attestations
+                                                                                           if a.get("claim") == x["name"] or a.get("hypothesis") == x["name"]}))
+    return [c["name"] for c in d["claims"] if lacks(c)] + ["hypothesis " + h["name"] for h in d["hypotheses"] if lacks(h)]
 
 
 def counts(d: dict) -> dict:

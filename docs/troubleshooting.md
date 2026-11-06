@@ -45,6 +45,8 @@ Find the message, then the fix.
 | *needs one paper selected* | choose a paper in the paper menu (not *all papers*) |
 | *the review pack did not build; see the job log* | open **Jobs → log**. Usually the paper does not build, or `latexmk` / `pdflatex` is missing |
 | *a … job is already running* / *a Lean job is already running* | one job per kind, one Lean job overall; wait or **cancel** |
+| *N not recoverable* after **Rebuild from git** | the old state is not fully in git (a generated, ignored file such as the Lean dump). Use *also text only*, or see [Snapshots](snapshots.md#rebuilding-snapshots-from-git) |
+| *this project is not in a git repository* | the rebuild needs git; without it only snapshots made from now on exist |
 | *no snapshot was recorded … cannot be compared* | the attestation is stale and was made before snapshots existed ([Snapshots](snapshots.md)) |
 
 If something else goes wrong, `ledger.py` itself is the reference: run the same command in a terminal and compare

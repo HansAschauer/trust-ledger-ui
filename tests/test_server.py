@@ -210,3 +210,14 @@ def test_unread_post_bodies_do_not_corrupt_a_keep_alive_connection(app):
         assert r.status == 200 and b"papers" in r.read()
     c.request("POST", "/api/reload?paper=egg", body=b"x" * 1_000_001, headers=h)
     assert c.getresponse().status == 413
+
+
+def test_assessment_in_the_detail_and_recovery_from_git(app, egg):
+    d = json.loads(get(app, "/api/claims?paper=egg")[1])
+    assert "stale_unsnapshotted" in d and all("assessment" in c for c in d["claims"])
+    det = json.loads(get(app, "/api/claims/scaling?paper=egg")[1])
+    assert "assessment" in det
+    # not a git repository: the message says so, the server stays up
+    st, r = post(app, "/api/snapshots?paper=egg", {"from_git": True})
+    assert st == 500 and "git" in r["error"]
+    assert get(app, "/api/papers")[0] == 200

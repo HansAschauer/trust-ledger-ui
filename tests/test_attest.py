@@ -127,3 +127,34 @@ def test_hypothesis_targets_use_the_hypothesis_checklist_and_state(config_file, 
         pytest.skip("the egg example has no hypothesis")
     pv = att.preview("egg", "hypothesis", [hyps[0]["name"]], "green", "", [], signing.id)
     assert pv["items"][0]["ok"]
+
+
+def git_repo(path):
+    import os
+    import shutil
+    import subprocess
+    if not shutil.which("git"):
+        pytest.skip("needs git")
+    env = dict(os.environ, GIT_AUTHOR_NAME="T", GIT_AUTHOR_EMAIL="t@example.org", GIT_COMMITTER_NAME="T",
+               GIT_COMMITTER_EMAIL="t@example.org", GIT_CONFIG_GLOBAL="/dev/null")
+    g = lambda *a: subprocess.run(["git", "-C", str(path), *a], check=True, capture_output=True, text=True, env=env).stdout.strip()
+    g("init", "-q", "-b", "main")
+    g("add", "-A")
+    g("commit", "-q", "-m", "base")
+    return g
+
+
+def test_in_a_git_project_the_record_names_the_commit_and_undo_still_works(config_file, tmp_path, signing, egg):
+    g = git_repo(egg)
+    signing.load()
+    project, att = make(config_file, tmp_path)
+    f = egg / "ledger" / "attestations.toml"
+    before = f.read_bytes()
+    pv, job = sign(att, ["scaling"], signing)
+    assert job["state"] == "done"
+    text = f.read_text()
+    assert f'git_head = "{g("rev-parse", "HEAD")}"' in text and "git_dirty = " in text
+    assert att.undo()["removed"] == ["scaling"]                       # the text it removes is what was really appended
+    assert f.read_bytes() == before
+    L = project.tool.Ledger(project.root, "egg")
+    assert L.errors == []
