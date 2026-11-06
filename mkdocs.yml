@@ -1,0 +1,50 @@
+site_name: trust-ledger-ui
+site_description: A local web page to browse a trust ledger and attest claims, one or many at once
+docs_dir: docs
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle: { icon: material/weather-night, name: Dark mode }
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle: { icon: material/weather-sunny, name: Light mode }
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc: { permalink: true }
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.keys
+  - pymdownx.tabbed: { alternate_style: true }
+nav:
+  - Home: index.md
+  - Getting started:
+      - Before you start: requirements.md
+      - Install and first start: install.md
+      - Setting up signing: signing.md
+      - A tour of the page: tour.md
+  - Workflows:
+      - Attest claims: attesting.md
+      - Attest a hypothesis: hypotheses.md
+      - After you edited the paper: after-edit.md
+      - Review packs: review-packs.md
+      - Background jobs: jobs.md
+      - Snapshots and diffs: snapshots.md
+  - Reference:
+      - Configuration: configuration.md
+      - From another device: remote.md
+      - Security and what is written: security.md
+      - Troubleshooting: troubleshooting.md
+  - Development:
+      - Specification: development/specification.md
+      - Design decisions: development/design.md
+      - Tests and screenshots: development/testing.md

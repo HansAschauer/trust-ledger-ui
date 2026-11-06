@@ -1,0 +1,14 @@
+name: docs
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --only-group docs
+      - run: uv run --no-sync mkdocs gh-deploy --force
