@@ -22,6 +22,12 @@ prerequisites at the top.
     trust-ledger checkout with `[ledger] tool = "…/trust-ledger/ledger.py"` (what `ledger-ui --init` does when it finds one).
     The error message says "lacks the library API" when this is the problem.
 
+!!! tip "No ledger yet?"
+    Run `python3 path/to/trust-ledger/ledger.py init` in the project directory. It finds your paper, writes `ledger/` with
+    a claim for every labelled theorem, lemma and so on, and can register your SSH key (`--key ~/.ssh/id_ed25519.pub
+    --person "Your Name"`). Then continue with [Install and first start](install.md). `ledger-ui --init` is a different
+    command: it writes the *tool's* own configuration file for a ledger that already exists.
+
 ## A checklist before the first attestation
 
 - [ ] `uv run ledger-ui --summary` lists your papers with their counts (the tool can read the ledger).
