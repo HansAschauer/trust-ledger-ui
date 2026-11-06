@@ -10,7 +10,7 @@ Put them next to each other (the tests expect that; the tool itself only needs t
 
 ```bash
 git clone <url of trust-ledger>
-git clone <url of trust-ledger-ui>
+git clone git@github.com:HansAschauer/trust-ledger-ui.git
 cd trust-ledger-ui
 uv sync
 ```

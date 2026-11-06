@@ -11,6 +11,9 @@ authors = [
 requires-python = ">=3.11"
 dependencies = []   # standard library only; the JavaScript (Alpine.js, KaTeX) is vendored in static/
 
+[project.urls]
+Repository = "https://github.com/HansAschauer/trust-ledger-ui"
+
 [project.scripts]
 ledger-ui = "trust_ledger_ui.cli:main"
 

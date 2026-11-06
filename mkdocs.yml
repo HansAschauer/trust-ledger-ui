@@ -1,4 +1,6 @@
 site_name: trust-ledger-ui
+repo_url: https://github.com/HansAschauer/trust-ledger-ui
+repo_name: HansAschauer/trust-ledger-ui
 site_description: A local web page to browse a trust ledger and attest claims, one or many at once
 docs_dir: docs
 theme:
