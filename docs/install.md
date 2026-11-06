@@ -9,7 +9,7 @@
 Put them next to each other (the tests expect that; the tool itself only needs the path to `ledger.py`).
 
 ```bash
-git clone <url of trust-ledger>
+git clone https://github.com/HansAschauer/trust-ledger.git
 git clone git@github.com:HansAschauer/trust-ledger-ui.git
 cd trust-ledger-ui
 uv sync

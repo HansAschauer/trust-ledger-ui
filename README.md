@@ -13,7 +13,7 @@ one reason, signed through your **ssh-agent**.
 ## Quick start
 
 ```bash
-git clone <url of trust-ledger> ; git clone git@github.com:HansAschauer/trust-ledger-ui.git   # next to each other
+git clone https://github.com/HansAschauer/trust-ledger.git ; git clone git@github.com:HansAschauer/trust-ledger-ui.git   # next to each other
 cd trust-ledger-ui && uv sync
 uv run ledger-ui --init path/to/your/project/ledger/ledger.toml           # once: writes ./ledger-ui.toml
 uv run ledger-ui                                                          # prints an address; opens the browser
