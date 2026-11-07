@@ -327,7 +327,8 @@ function ledgerApp() {
       try {
         const r = await this.api('/api/snapshots' + this.q(), 'POST', { from_git: true, partial });
         const n = (s) => r.results.filter(x => x.status === s).length;
-        this.recoverMsg = n('recovered') + ' rebuilt exactly, ' + n('partial') + ' as text only, ' + n('not found') + ' not recoverable.';
+        this.recoverMsg = n('recovered') + ' rebuilt exactly, ' + n('partial') + ' as text only, ' +
+          (n('partial kept') ? n('partial kept') + ' kept as text only from before, ' : '') + n('not found') + ' not recoverable.';
         await this.loadScope();
         if (this.current) this.open(this.current);
         if (this.currentHyp) this.openHyp(this.currentHyp);
