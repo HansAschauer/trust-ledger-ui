@@ -1,0 +1,1947 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A local web page to browse a trust ledger and attest claims, one or many at once">
+      
+      
+      
+      
+        <link rel="prev" href="../../troubleshooting/">
+      
+      
+        <link rel="next" href="../design/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+    
+    
+      
+        <title>Specification - trust-ledger-ui</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#trust-ledger-ui-specification-draft-1-2026-11-06" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="trust-ledger-ui" class="md-header__button md-logo" aria-label="trust-ledger-ui" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            trust-ledger-ui
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Specification
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/HansAschauer/trust-ledger-ui" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    HansAschauer/trust-ledger-ui
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="trust-ledger-ui" class="md-nav__button md-logo" aria-label="trust-ledger-ui" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    trust-ledger-ui
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/HansAschauer/trust-ledger-ui" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    HansAschauer/trust-ledger-ui
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../requirements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Before you start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install and first start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../signing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Setting up signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tour/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    A tour of the page
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workflows
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Workflows
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../attesting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attest claims
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hypotheses/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attest a hypothesis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../after-edit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    After you edited the paper
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../review-packs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Review packs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../jobs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Background jobs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../snapshots/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Snapshots and diffs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sharing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    A page for referees and readers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../remote/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    From another device
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security and what is written
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specification
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-purpose-and-non-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Purpose and non-goals
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-configuration-ledger-uitoml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Configuration: ledger-ui.toml
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-data-shown" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Data shown
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-screens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Screens
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-attestation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Attestation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Attestation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-seen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Seen
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-dialog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Dialog
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-execution-server-side" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Execution (server side)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-review-packs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Review packs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-jobs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Jobs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-formula-rendering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Formula rendering
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-server-api-and-security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Server API and security
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-changes-to-ledgerpy-trust-ledger-repo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Changes to ledger.py (trust-ledger repo)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Tests
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-milestones" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Milestones
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-notes-from-milestone-0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. Notes from milestone 0
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-open" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. Open
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-static-read-only-page-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. Static read-only page (export)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../design/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Design decisions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tests and screenshots
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-purpose-and-non-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Purpose and non-goals
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-configuration-ledger-uitoml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Configuration: ledger-ui.toml
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-data-shown" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Data shown
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-screens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Screens
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-attestation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Attestation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Attestation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-seen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Seen
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-dialog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Dialog
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-execution-server-side" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Execution (server side)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-review-packs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Review packs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-jobs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Jobs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-formula-rendering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Formula rendering
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-server-api-and-security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Server API and security
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-changes-to-ledgerpy-trust-ledger-repo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Changes to ledger.py (trust-ledger repo)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Tests
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-milestones" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Milestones
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-notes-from-milestone-0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. Notes from milestone 0
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-open" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. Open
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-static-read-only-page-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. Static read-only page (export)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="trust-ledger-ui-specification-draft-1-2026-11-06">trust-ledger-ui: specification (draft 1, 2026-11-06)<a class="headerlink" href="#trust-ledger-ui-specification-draft-1-2026-11-06" title="Permanent link">&para;</a></h1>
+<p>Decisions behind this document: <a href="../design/">Design decisions</a>. Everything here is open to correction before code.</p>
+<h2 id="1-purpose-and-non-goals">1. Purpose and non-goals<a class="headerlink" href="#1-purpose-and-non-goals" title="Permanent link">&para;</a></h2>
+<p>Purpose: browse the trust ledger of a paper project (several papers), find claims and hypotheses that have no
+attestation or a stale one, read what would be signed, and attest one or many of them (same level, same
+reason) with an ssh-agent signature.</p>
+<p>Non-goals: no editing of claims, citations or assertions (hand-edited TOML stays hand-edited); no
+verification logic of its own (that is <code>ledger.py verify</code>); no storage of ledger state outside the ledger's
+own files; no multi-user server (one person, one machine, 127.0.0.1). The one exception to "local only" is the
+static read-only page of section 16, which is written to files and has no server at all.</p>
+<h2 id="2-architecture">2. Architecture<a class="headerlink" href="#2-architecture" title="Permanent link">&para;</a></h2>
+<pre><code>browser (Alpine.js + KaTeX, static/)  &lt;--JSON/SSE--&gt;  server.py (http.server, 127.0.0.1)
+                                                          |
+                                                      core/  (no HTTP, no UI)
+                                                          |
+                              ledger.py (imported as a module)   ssh-keygen / ssh-agent   latex (via ledger.py review)
+</code></pre>
+<ul>
+<li><code>core/ledgerio.py</code>: the only module that touches <code>ledger.py</code> internals. Loads it from the configured path
+  with <code>importlib</code>, checks <code>__version__</code> and <code>FORMAT_VERSION</code> against a list of tested versions (warns on an
+  untested one, refuses on a different format version). Exposes plain dataclasses: <code>Paper</code>, <code>Claim</code>,
+  <code>Hypothesis</code>, <code>Attestation</code>. If <code>ledger.py</code> ever gets <code>--json</code>, only this module changes.</li>
+<li><code>core/status.py</code>: view model per claim (see 4). <code>core/attest.py</code>: validate, sign, append. <code>core/jobs.py</code>:
+  background commands with a log. <code>core/render.py</code>: macro collection and shims for KaTeX.</li>
+<li>The server is a thin layer; the whole core is testable without a browser.</li>
+<li>Loading goes through <code>Ledger(root, paper)</code> once per paper and is cached with the mtime of every file the
+  ledger read; a changed file invalidates the cache and the page shows "changed on disk, reload?".</li>
+</ul>
+<h2 id="3-configuration-ledger-uitoml">3. Configuration: <code>ledger-ui.toml</code><a class="headerlink" href="#3-configuration-ledger-uitoml" title="Permanent link">&para;</a></h2>
+<p>Looked up in this order: <code>--config FILE</code>, <code>./ledger-ui.toml</code>, <code>$XDG_CONFIG_HOME/trust-ledger-ui/config.toml</code>.
+Paths are relative to the config file. The first start without a config offers to write one (asks for the
+<code>ledger.toml</code> path only).</p>
+<pre><code>[ledger]
+file = "ledger/ledger.toml"                 # papers, [review], [checklist.*] come from here
+tool = "ledger/vendor/ledger.py"            # imported as a module; also used for review/lock/verify/check/extract
+
+[signing]
+person = "Hans Aschauer"
+key = "hans"                                # id in ledger/keys.toml; signs through ssh-agent only
+reasons = ["Checked against blind backtranslation"]   # reason templates offered in the dialog
+
+[metadata]                                  # optional, display and links only
+paper_toml = "paper/{name}/paper.toml"      # title, [editions] -&gt; links; missing file = name only
+
+[viewer]
+pdf = "xdg-open"                            # or "embed" (default) to show review packs in the page
+
+[server]
+port = 0                                    # 0 = free port; the URL with the token is printed
+open_browser = true
+</code></pre>
+<p>No project data is copied into this file. Unknown keys are an error (typos must not be silent).</p>
+<h2 id="4-data-shown">4. Data shown<a class="headerlink" href="#4-data-shown" title="Permanent link">&para;</a></h2>
+<p>Per claim (from <code>Ledger</code>): name, paper(s), label, evidence class, statement source (<code>tex</code>/<code>manual</code>), per tool
+state (Lean <code>ok</code>/<code>assumes (k/n known thm.)</code>, checks pass/fail), register size, attestations (latest per
+person: level, date, current/STALE, signature state), <code>bound</code> (current spec hash), uses / used-by.
+Derived <code>attention</code>: <code>none</code> (no attestation), <code>stale</code> (all attestations stale), <code>ok</code>.
+Per hypothesis: name, label, cites, known-theorem flag, attestations, checklist H1/H2.
+Per paper: counts (green, yellow, none, stale, failed checks, open hypotheses, uncovered labels), root hash,
+<code>title</code> and edition PDF links from <code>paper.toml</code> when present (cross-check: warn if its <code>main</code> differs).
+Ledger warnings and errors (as <code>ledger.py status</code> prints them) are shown in a collapsible bar.</p>
+<h2 id="5-screens">5. Screens<a class="headerlink" href="#5-screens" title="Permanent link">&para;</a></h2>
+<p>One page, three regions: header (project, paper switcher, agent/key status, job indicator), list (left),
+detail (right). Keyboard shortcuts are optional extras; every action has a button.</p>
+<ol>
+<li><strong>Papers</strong>: one row per paper with the counts; click selects the paper; "all papers" merges claims
+   (shared claims appear once, with their papers listed).</li>
+<li><strong>Claim list</strong>: columns as in <code>ledger.py status</code> plus <code>attention</code>. Quick filters: needs attention
+   (none + stale), none, stale, hypotheses, Lean <code>assumes</code>, failed checks; text search over name and label;
+   sort by any column and a "dependency order" sort (what a claim uses comes first). Checkbox per row,
+   select all filtered, select all stale. A badge shows <code>seen</code> for claims marked seen (6).</li>
+<li><strong>Detail</strong>: paper statement (KaTeX), Lean statement, back-translation (the <code>leanreadings</code> text),
+   uses / used-by with status colours, attestation history, "why" (what makes it this status), checks,
+   register, and the buttons <em>Mark seen</em>, <em>Attest</em>, <em>Build review pack</em>. For stale claims: what changed
+   since the attestation (first version: the old and new <code>bound</code> hash and the list of changed inputs if
+   <code>ledger.py</code> can name them; a text diff is a later <code>ledger.py</code> feature, see 11).</li>
+<li><strong>Hypotheses tab</strong>: same list/detail for hypotheses, with the H1/H2 checklist and the cited source
+   (link to <code>downloaded_papers/</code> if the file exists, else DOI/arXiv from the citation).</li>
+<li><strong>Attest dialog</strong> (single and batch, 6).</li>
+<li><strong>Jobs panel</strong>: running and finished jobs with a live log.</li>
+</ol>
+<h2 id="6-attestation">6. Attestation<a class="headerlink" href="#6-attestation" title="Permanent link">&para;</a></h2>
+<h3 id="61-seen">6.1 Seen<a class="headerlink" href="#61-seen" title="Permanent link">&para;</a></h3>
+<p>"Seen" is set only explicitly (button or key <code>v</code>) on the detail view of one claim. It is stored in
+the browser (<code>localStorage</code>) per claim and <code>bound</code> hash; a changed <code>bound</code> drops the marker. It is advice to
+the person, not a security boundary, and it is not written to the ledger.</p>
+<h3 id="62-dialog">6.2 Dialog<a class="headerlink" href="#62-dialog" title="Permanent link">&para;</a></h3>
+<p>Fields: level (green/yellow/conjecture as <code>ledger.py</code> allows; yellow requires a reason), reason (multi-line;
+templates from <code>signing.reasons</code>, plus the last reasons used), checklist (checkboxes from <code>[checklist.*]</code>
+that apply to the targets), person and key (defaults from the config, key must be in <code>keys.toml</code>).
+Claims and hypotheses are not mixed in one batch (different checklists).</p>
+<p>Preview table: claim, current attestation (level, date, current/STALE) -&gt; new level, short <code>bound</code>, seen yes/no.
+Claims not marked seen are highlighted and listed in a warning. Confirming such a batch needs an extra step
+(type the number of unseen claims, or tick "I am attesting claims I have not marked as seen"). There is no
+block: the decision stays with the person. The reason text is shown above the table exactly as it will be signed.</p>
+<h3 id="63-execution-server-side">6.3 Execution (server side)<a class="headerlink" href="#63-execution-server-side" title="Permanent link">&para;</a></h3>
+<p>For each claim, in the order shown:
+1. Re-read the ledger if any file changed; recompute <code>bound</code> from the current ledger, never take it from the
+   browser. If the <code>bound</code> differs from the one the preview showed, skip that claim and report it.
+2. Build the record as <code>cmd_attest</code> does (<code>person</code>, <code>date</code> = today, <code>level</code>, <code>reason</code>, <code>checklist</code>, <code>bound</code>);
+   run <code>L.checklist_problems</code>.
+3. Sign <code>attestation_message(project, rec)</code> with <code>ssh-keygen -Y sign -n &lt;namespace&gt; -f &lt;pubkey file&gt;</code>: the
+   public key from <code>keys.toml</code> is written to a temp file, the private key stays in the agent. The tool never
+   asks for a passphrase and never opens a private key file. Verify the signature with <code>ssh_verify</code> before
+   writing. Agent not reachable or key not loaded: stop before the first claim with the exact <code>ssh-add</code>
+   command to run.
+4. Append to <code>ledger/attestations.toml</code> with <code>toml_record</code>, under a file lock, one claim at a time, so
+   an interrupted batch leaves only whole records.
+A failure on one claim is reported and does not stop the others. Afterwards: reload, a result table
+(attested / skipped with reason / failed), and a one-line summary in the session log. <em>Undo last batch</em>
+removes the records this session appended while the file's tail is still exactly that text.
+Signatures are meant to be deliberate: one <code>ssh-keygen -Y sign</code> call per attestation, never a batched or
+cached signature. If the agent asks for confirmation per signature (<code>ssh-add -c</code>), that is intended; the
+dialog says up front how many confirmations to expect and the progress shows which claim is waiting.</p>
+<h2 id="7-review-packs">7. Review packs<a class="headerlink" href="#7-review-packs" title="Permanent link">&para;</a></h2>
+<p><em>Build review pack</em> runs <code>ledger.py [-P paper] review --for &lt;selection or current claim&gt;</code> as a job
+(output directory from <code>[review] out</code>). On success the PDF opens in the embedded viewer (an <code>&lt;iframe&gt;</code>
+below the detail) or in the system viewer, per <code>viewer.pdf</code>. A pack records when it was built and from which
+<code>bound</code> hashes; the page shows "pack older than the statement" when a <code>bound</code> has changed since. Selecting
+claims and pressing the button builds one pack for exactly those claims, so the usual loop is: filter to
+stale, build the pack, read, mark seen, attest. Later: inline view of statement / back-translation / Lean
+text without LaTeX build (11).</p>
+<h2 id="8-jobs">8. Jobs<a class="headerlink" href="#8-jobs" title="Permanent link">&para;</a></h2>
+<p><code>status</code>, <code>lock</code>, <code>verify</code>, <code>check</code>, <code>extract</code>, <code>review</code> run as subprocesses of <code>ledger.py</code> in the project
+root, one job at a time per kind, and <em>only one Lean job at all</em> (<code>extract</code> and anything that starts Docker
+Lean). <code>extract</code> is never started automatically and asks for confirmation (minutes of Docker). Output goes to
+a log streamed over Server-Sent Events; a job ends with status, duration and a reload of the view.</p>
+<h2 id="9-formula-rendering">9. Formula rendering<a class="headerlink" href="#9-formula-rendering" title="Permanent link">&para;</a></h2>
+<p>Statements, back-translations and Lean text are LaTeX fragments (Pandoc-style, <code>\leandisplay{...}</code>,
+<code>\ensuremath{...}</code>, <code>\(..\)</code>, <code>\[..\]</code>, environments). <code>core/render.py</code>:
+- collects <code>\newcommand</code>, <code>\renewcommand</code>, <code>\DeclareMathOperator</code> from the preamble of each paper's <code>main</code>
+  file (balanced-brace parse; 32 macros in the current papers) and delivers them as KaTeX <code>\def</code>s (needed:
+  <code>\ket</code> etc. clash with KaTeX built-ins);
+- adds the shim list: <code>\mathds</code>-&gt;<code>\mathbb</code>, <code>\cite</code>/<code>\ref</code>/<code>\eqref</code> placeholders, <code>psmallmatrix</code>, <code>multline</code>;
+- a fragment that fails to render is shown as source with a note and counted in the paper's counts, so a
+  rendering gap is visible, not hidden.
+A script <code>tools/render_check.py</code> (the 9899-formula test, rewritten as a test) guards this.</p>
+<h2 id="10-server-api-and-security">10. Server API and security<a class="headerlink" href="#10-server-api-and-security" title="Permanent link">&para;</a></h2>
+<p>Local only: bind <code>127.0.0.1</code>; a random token per start in the URL fragment, sent as <code>Authorization</code> on every
+call; reject requests whose <code>Host</code> is not the bound address or whose <code>Origin</code> is present and different;
+no CORS headers; all JavaScript vendored (<code>static/vendor/</code>, with version and SHA-256 in <code>VENDOR.md</code>).</p>
+<table>
+<thead>
+<tr>
+<th>Method, path</th>
+<th>Writes</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GET <code>/api/papers</code></td>
+<td>no</td>
+<td>papers with counts, titles, edition links</td>
+</tr>
+<tr>
+<td>GET <code>/api/claims?paper=</code></td>
+<td>no</td>
+<td>claim view models</td>
+</tr>
+<tr>
+<td>GET <code>/api/claims/{name}</code></td>
+<td>no</td>
+<td>detail incl. why, history, render macros</td>
+</tr>
+<tr>
+<td>GET <code>/api/hypotheses?paper=</code></td>
+<td>no</td>
+<td>hypothesis view models</td>
+</tr>
+<tr>
+<td>GET <code>/api/status</code></td>
+<td>no</td>
+<td>agent/key state, ledger warnings, changed-on-disk flag</td>
+</tr>
+<tr>
+<td>POST <code>/api/attest/preview</code></td>
+<td>no</td>
+<td>validated preview table for a batch</td>
+</tr>
+<tr>
+<td>POST <code>/api/attest</code></td>
+<td><strong>yes</strong></td>
+<td>execute a batch (6.3); needs token and a preview id</td>
+</tr>
+<tr>
+<td>POST <code>/api/attest/undo</code></td>
+<td><strong>yes</strong></td>
+<td>undo the last batch of this session</td>
+</tr>
+<tr>
+<td>POST <code>/api/jobs</code></td>
+<td>yes (runs commands)</td>
+<td>start a job from a fixed list, no free command strings</td>
+</tr>
+<tr>
+<td>GET <code>/api/jobs/{id}/events</code></td>
+<td>no</td>
+<td>SSE log</td>
+</tr>
+<tr>
+<td>GET <code>/api/packs/{id}.pdf</code></td>
+<td>no</td>
+<td>built review pack</td>
+</tr>
+</tbody>
+</table>
+<p>Rules: no endpoint takes a path or command from the client; file names come from the ledger/config. The
+server logs every write to <code>ledger-ui.log</code> next to the config.</p>
+<h2 id="11-changes-to-ledgerpy-trust-ledger-repo">11. Changes to <code>ledger.py</code> (trust-ledger repo)<a class="headerlink" href="#11-changes-to-ledgerpy-trust-ledger-repo" title="Permanent link">&para;</a></h2>
+<p><code>ledger.py</code> may be changed for this tool; the changes are made in the trust-ledger repository (format
+version, tests and docs there) and then copied into <code>ledger/vendor/</code> of a project as usual. Wanted, in order
+of need:</p>
+<ol>
+<li><em>Library API without <code>sys.exit</code></em>: <code>sign_attestation</code>, <code>append_attestation</code> (and <code>ssh_sign</code>) raise a
+   <code>LedgerError</code> instead of exiting; <code>cmd_attest</code> becomes a thin wrapper. Needed by milestone 2.</li>
+<li><em>Structured status</em>: <code>status --json</code> (claims, per tool states, attestation state with signature state,
+   hypotheses, warnings), built from the same function as the text output. Then <code>ledgerio.py</code> calls this API
+   instead of reading <code>Ledger</code> attributes; the version check stays.</li>
+<li><em>Stale diff</em>: "what changed since the attestation of claim X": the inputs whose hash differs from the
+   attested one and, for the statement, the old and new text. This needs the ledger to keep the attested
+   inputs retrievable (an attestation only stores the <code>bound</code> hash today); the design of that (store the
+   text in the attestation, or recover it from the previous lock file / a snapshot) is part of the task.
+   Milestone 6.</li>
+<li><em>Batch attestation in the library</em> (one reason, many claims, per-claim result) if it turns out cleaner
+   there than in <code>core/attest.py</code>; the CLI could then offer it too.</li>
+</ol>
+<p>Until a change exists, the UI uses the import-based fallback described in 2 and says what is missing.</p>
+<h2 id="12-tests">12. Tests<a class="headerlink" href="#12-tests" title="Permanent link">&para;</a></h2>
+<p>Pytest on the core with the <code>examples/egg</code> ledger of trust-ledger as a fixture (it ships keys and
+attestations; its private keys live in <code>private/</code>, so a test ssh-agent can sign for real). Cases: status view
+equals <code>ledger.py status</code> output; batch attestation writes records that <code>verify</code> accepts; a stale <code>bound</code>
+is skipped; an unloaded key stops the batch before the first claim; a half-written file never results.
+Server tests check token/Host/Origin handling. Rendering test as in 9. Browser behaviour is checked by hand
+for the first milestones.</p>
+<h2 id="13-milestones">13. Milestones<a class="headerlink" href="#13-milestones" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Done 2026-11-06:</strong> library API in trust-ledger (11.1, 11.2; and the agent-only signing fix, see below); Alpine and KaTeX vendored (<code>static/VENDOR.md</code>); config loader; <code>core/ledgerio.py</code> + <code>ledger-ui --summary</code>, tested against <code>ledger.py status</code>.</li>
+<li><strong>Done 2026-11-06:</strong> server, token/Host/Origin/CSP, paper switcher + claim list + filters + sort + search, detail with KaTeX (statement, back-translation, Lean text, uses/used-by, attestation history, rests-on), changed-on-disk banner, deep links (<code>?paper=&amp;claim=</code>). Not yet: checkboxes/selection (milestone 3), hypotheses tab (5), <code>paper.toml</code> titles/edition links (5).</li>
+<li><strong>Done 2026-11-06:</strong> attesting through ssh-agent (core is already batch-capable: preview, signing job with per-claim progress, undo, session log <code>ledger-ui.log</code>); attest dialog for one claim, explicit "seen" marker (button / key <code>v</code>, kept in the browser per claim and bound hash), unseen warning with extra confirmation, key <code>a</code> opens the dialog. Hypotheses can be attested through the same API (UI in milestone 5).</li>
+<li><strong>Done 2026-11-06:</strong> batch: checkboxes in the list, <em>Select</em> menu (all shown / stale / without attestation / shown-but-unseen / clear), "N selected, M seen", <em>Next unseen</em> (opens the next selected claim you have not marked), keys <code>x</code> select, <code>j</code>/<code>k</code> move, <code>a</code> attests the selection (or the current claim); one dialog for the whole selection; attested claims leave the selection afterwards.</li>
+<li><strong>Done 2026-11-06:</strong> jobs (review, lock, verify, check, extract) with live log, cancel, one job per kind and one Lean job at a time; <em>Review pack</em> for the current claim or the selection (one paper at a time); embedded PDF viewer with a "statement changed since the pack was built" warning; <em>Run…</em> menu. Progress is polled (every 0.8 s), not streamed with Server-Sent Events: same effect, no long-lived connections.</li>
+<li><strong>Done 2026-11-06:</strong> hypotheses tab (list with status, detail with the statement, cited sources as links, H-checklist, history, the claims proved given it; attest as a known theorem, same dialog, kind <code>hypothesis</code>; key <code>t</code> switches tabs); <code>paper.toml</code> metadata: title in the paper menu, links to the paper/reviewed/explained PDFs (only those that exist), warnings for a mismatching <code>name</code>/<code>main</code>. Phone layout (one column, fewer columns, no horizontal overflow) checked at 390 px.</li>
+<li><strong>Done 2026-11-06:</strong> stale diff (see below); config bootstrap (<code>ledger-ui --init path/to/ledger/ledger.toml</code> writes <code>ledger-ui.toml</code>: finds a <code>ledger.py</code>, takes the first key of <code>keys.toml</code>; never overwrites). The "inline review view" is the detail page itself: statement, back-translation and Lean text are shown there without building a pack.</li>
+</ol>
+<h2 id="14-notes-from-milestone-0">14. Notes from milestone 0<a class="headerlink" href="#14-notes-from-milestone-0" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>ssh-keygen -Y sign -f KEY.pub</code> falls back to the private key file next to the <code>.pub</code> when the agent lacks the
+  key (and then asks for its passphrase on a terminal, which a server cannot answer). <code>ledger.py ssh_sign</code> therefore
+  copies a <code>.pub</code> file into a scratch directory first; a key that is not in the agent is a <code>LedgerError</code>.</li>
+<li>
+<p>The vendored <code>ledger/vendor/ledger.py</code> of the paper project predates the API; until it is re-copied from
+  trust-ledger, point <code>[ledger] tool</code> at the trust-ledger checkout.</p>
+</li>
+<li>
+<p>Milestone 1: <code>texlite.js</code> renders every statement and back-translation of the nuclear, threshold and reach papers
+  (136 texts, about 7000 formulas) with no failed formula and no unknown command. The ledger's statements are
+  blocks <code>[label] kind: [title] body</code>; an <code>equation</code>/<code>align</code> block is the bare formula and is rendered as display math.</p>
+</li>
+<li>Alpine calls <code>init()</code> itself; do not also put <code>x-init="init()"</code> on the element (it ran twice and the second run lost
+  the query string).</li>
+<li>
+<p><code>ledger.py</code> got <code>why_data</code> / <code>claim_detail</code> (the detail view's data) in addition to <code>status_data</code>.</p>
+</li>
+<li>
+<p>Milestone 2: the agent must hold the key <em>before</em> the batch starts (checked at preview and again at the start); the dialog
+  shows the agent state and the <code>ssh-add</code> hint. <code>Preview</code> stores what will be signed on the server; <code>POST /api/attest</code> takes only
+  the preview's id (single use, 20 minutes). An end-to-end browser test is <code>tests/e2e/run_e2e.py</code> (needs node, playwright-core
+  and Google Chrome; not part of <code>pytest</code>).</p>
+</li>
+<li>
+<p>A Unix socket path is limited to about 100 characters; test agents therefore live in short temporary paths.</p>
+</li>
+<li>
+<p>Milestone 4: packs are built with <code>--out &lt;config dir&gt;/.ledger-ui/packs/&lt;job id&gt;/</code>, so the project's own <code>review/</code> files are
+  never overwritten; add <code>.ledger-ui/</code> and <code>ledger-ui.log</code> to the project's ignore file. The PDF is fetched with the token and
+  shown from a <code>blob:</code> URL (an iframe cannot send an Authorization header, and the token stays out of URLs). A pack for
+  <code>balanced</code> in the nuclear paper takes about 10 s (the paper is built once, then the packet twice).</p>
+</li>
+<li>
+<p>The stale warning compares the claims' statement hashes (<code>bound</code>) at build time with the current ones; it does not
+  notice changes to the packet's other claims (what the targets rest on).</p>
+</li>
+<li>
+<p>Milestone 5: a hypothesis whose statement is hand-written in a scope (<code>text</code>, because its paper is not part of that scope)
+  has another <code>bound</code> than in the paper's own scope, so an attestation made there shows as stale in the other scopes (the nuclear
+  paper's Banach lemma is current in <code>-P nuclear</code>, stale in <code>-P reach</code>). That is the ledger's rule, shown as it is.</p>
+</li>
+<li>
+<p>Two <code>section.detail</code> elements exist now (claims, hypotheses): address them by id (<code>#detail-claim</code>, <code>#detail-hyp</code>).</p>
+</li>
+<li>
+<p>Milestone 6, stale diff: no format change. <code>ledger.py</code> writes <code>ledger/snapshots/&lt;bound&gt;.json</code> whenever it attests (statement
+  text, spec hashes and spec content of the evidence nodes and their declarations, statements of used claims); <code>diff_since</code>
+  compares the latest attestation that has a snapshot with the current state: statement (word diff of the LaTeX source),
+  claims it uses, and the changed evidence nodes field by field (Lean type, value). The page shows it for every claim or
+  hypothesis that has a stale attestation, and offers "Record snapshots now" (<code>ledger.py snapshot</code>) for current attestations
+  that have none. An attestation that is already stale and has no snapshot cannot be compared; the page says so.</p>
+</li>
+<li>The Egg end-to-end test found that POST endpoints which never read their body corrupted keep-alive connections (the next
+  request was parsed as <code>{}GET ...</code>); the server now always consumes the body.</li>
+</ul>
+<h2 id="15-open">15. Open<a class="headerlink" href="#15-open" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>\mathbb{1}</code> for <code>\mathds{1}</code> looks different in KaTeX; check by eye at milestone 1.</li>
+<li>Several projects in one config (list of <code>[[ledger]]</code>): the schema leaves room, not in the first version.</li>
+</ul>
+<h2 id="16-static-read-only-page-export">16. Static read-only page (export)<a class="headerlink" href="#16-static-read-only-page-export" title="Permanent link">&para;</a></h2>
+<p>For referees and readers who want to see what a paper's ledger records before installing anything.
+<code>ledger-ui --export DIR [--paper NAME]... [--repo URL]</code> writes <code>DIR/&lt;paper&gt;.html</code> per paper and <code>DIR/index.html</code>,
+and exits; no server runs. Code: <code>core/export.py</code>, page: <code>static/reader.html</code>, <code>reader.js</code>, <code>reader.css</code>.</p>
+<ul>
+<li><strong>Self-contained.</strong> Each page inlines its data (one <code>&lt;script type="application/json" id="ledger-data"&gt;</code> block),
+  the scripts (KaTeX, Alpine.js, <code>texlite.js</code>, <code>diff.js</code>, <code>reader.js</code>), the styles and the KaTeX <code>.woff2</code> fonts as
+  <code>data:</code> URIs. It works from disk (<code>file://</code>), from any web server and from GitHub Pages, and loads nothing from
+  the network. About 1.5 MB for a paper with 30 results.</li>
+<li><strong>A preview, not a check.</strong> The page recomputes no hash and checks no signature, and says so in a banner that is
+  always shown, with the root, the commit and the command that does check (<code>[paper.&lt;name&gt;] verify</code> in
+  <code>ledger.toml</code>, as in the paper's appendix). Signature states are shown as <code>ledger.py</code> found them when the page
+  was generated, and labelled that way.</li>
+<li><strong>Read-only.</strong> No attesting, no jobs, no "seen" marks, no storage. The address carries the selection
+  (<code>#claim=NAME</code>, <code>#hyp=NAME</code>, <code>#view=about</code>), so a link can point at one result.</li>
+<li><strong>Data</strong> (<code>EXPORT_FORMAT</code> 0.1): <code>status_data()</code> (without author-facing notes), <code>claim_detail</code> of every claim,
+  <code>hypothesis_detail</code> of every hypothesis, <code>diff_since</code> for every stale attestation, the attestation records as
+  written (reason, checklist, signature, signature state), the vocabulary (evidence types, checklist, levels,
+  verdicts, public keys), the paper's KaTeX macros, <code>lock()</code> (node kinds and full hashes, claim and hypothesis
+  spec hashes, the root), the git commit and uncommitted tracked files, the root in the generated
+  <code>ledger-&lt;paper&gt;-root.tex</code>, generation time and versions. Paths are relative to the project root. The node
+  payloads are not included (17 MB for one of our papers, mostly Lean terms), so the page cannot recompute the
+  root by itself; a later version can compare the node hashes with a lock file or recompute the tree above them.</li>
+<li><strong>Warnings</strong> at export time (printed, and shown on the page): the generated root file shows a different root
+  than the ledger (the PDF and the page would disagree), there is no generated root file, tracked files have
+  uncommitted changes, the ledger reports errors.</li>
+<li><strong>Safety of the inlined data.</strong> In the JSON block every <code>&lt;</code> is written as <code>\u003c</code>, so no text from the ledger can
+  end the element; inlined scripts have <code>&lt;/script</code> escaped. Texts are rendered by <code>texlite.js</code>, which escapes
+  everything it does not turn into markup.</li>
+<li><strong>Later:</strong> recompute the root in the browser (WebCrypto SHA-256 over canonical JSON) and check the SSH
+  signatures (Ed25519), once someone asks for it; the data block already carries the hashes, signatures and keys.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "content.code.copy", "toc.follow"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
+      
+    
+  </body>
+</html>
