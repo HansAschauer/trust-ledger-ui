@@ -19,6 +19,9 @@ uv run ledger-ui --init path/to/your/project/ledger/ledger.toml           # once
 uv run ledger-ui                                                          # prints an address; opens the browser
 ```
 
+To give referees and readers a read-only view of a paper's ledger without installing anything,
+`uv run ledger-ui --export public` writes one self-contained HTML page per paper ([docs/sharing.md](docs/sharing.md)).
+
 For attesting you also need a key that is registered in the ledger (`ledger.py addkey`) and loaded in your ssh-agent
 (`ssh-add`); see [docs/signing.md](docs/signing.md).
 

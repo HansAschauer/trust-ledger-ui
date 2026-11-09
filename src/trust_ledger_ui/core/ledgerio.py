@@ -200,6 +200,41 @@ class Project:
         except self.tool.LedgerError as ex:
             raise KeyError(name) from ex
 
+    def lock_data(self, paper: str | None) -> dict:
+        """What `ledger.py lock` writes (node kinds and full hashes, claim and hypothesis spec hashes, the root), computed
+        now; the lock file itself is not read or written."""
+        return self.load(paper)["L"].lock()
+
+    def attestation_records(self, paper: str | None) -> list[dict]:
+        """The attestation records in this scope as written (with reason and checklist, which `status_data` leaves out),
+        plus the signature state ledger.py found on loading (signed = checked against the registered key)."""
+        L = self.load(paper)["L"]
+        keep = ("claim", "hypothesis", "person", "date", "level", "reason", "checklist", "bound", "key", "sig")
+        return [dict({k: a[k] for k in keep if k in a}, signature=a.get("_sig", "unsigned")) for a in L.attestations]
+
+    def vocabulary(self, paper: str | None) -> dict:
+        """What the words on the page mean: evidence types, checklist items, attestation levels, assessment verdicts."""
+        L = self.load(paper)["L"]
+        return dict(evidence=[dict(id=e["id"], name=e["name"]) for e in L.evidence],
+                    checklist={k: dict(text=v.get("text", ""), applies=v.get("applies", "claim")) for k, v in L.checklist.items()},
+                    keys={k: dict(person=v.get("person", ""), public=v.get("public", ""), fingerprint=v.get("fingerprint", ""))
+                          for k, v in L.keys.items()},
+                    levels=list(self.tool.LEVELS), verdicts=list(getattr(self.tool, "ASSESSMENT_VERDICTS", ())))
+
+    def paper_settings(self, name: str) -> dict:
+        """The [paper.<name>] table of ledger.toml (main, supplement, verify, ...)."""
+        return dict(self._raw().get("paper", {}).get(name) or {})
+
+    def printed_root(self, name: str) -> str | None:
+        """The root in the generated ledger-<name>-root.tex (what the PDF shows once rebuilt), None if there is none."""
+        import re
+        dirs = self._raw().get("generated", {}).get("dirs") or []
+        if not dirs:
+            return None
+        f = self.root / dirs[0] / f"ledger-{name}-root.tex"
+        m = re.search(r"\\def\\LedgerRoot\{([0-9a-f]+)\}", f.read_text()) if f.is_file() else None
+        return m.group(1) if m else None
+
     def detail(self, paper: str | None, claim: str) -> dict:
         e = self.load(paper)
         try:

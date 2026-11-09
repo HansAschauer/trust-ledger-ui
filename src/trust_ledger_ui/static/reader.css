@@ -1,0 +1,16 @@
+/* Additions for the read-only page (reader.html); style.css is shared with the local UI. */
+.banner.preview { background:var(--sel); color:var(--fg); border-bottom:1px solid var(--line); }
+code.root { word-break:break-all; }
+.pad { padding:0 .8rem; }
+.tabs { display:flex; gap:.3rem; padding:.5rem .6rem 0; flex-wrap:wrap; }
+.tabs button.on { border-color:var(--fg); font-weight:600; }
+td.label { color:var(--muted); }
+.verdict { display:inline-block; padding:0 .45rem; border-radius:4px; font-size:.82rem; }
+.verdict.ok { background:color-mix(in srgb, var(--ok) 15%, transparent); color:var(--ok); }
+.verdict.stale { background:color-mix(in srgb, var(--stale) 15%, transparent); color:var(--stale); }
+.verdict.none { background:color-mix(in srgb, var(--none) 15%, transparent); color:var(--none); }
+.reason { white-space:pre-wrap; margin:.15rem 0 .3rem 1rem; color:var(--fg); }
+.about dl { margin:.3rem 0; } .about dt { font-weight:600; margin-top:.5rem; } .about dd { margin:.1rem 0 .3rem 1rem; }
+.about ol { padding-left:1.3rem; } .about li { margin:.3rem 0; }
+@media (prefers-color-scheme: dark) { .banner.warn { background:#3a2f12; color:#ffe2a0; } .banner.err { background:#3a1715; color:#ffc4be; } }
+.banner code { word-break:break-all; }

@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ledger</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="vendor/katex/katex.min.css">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="reader.css">
+<script type="application/json" id="ledger-data">null</script>
+<!-- scripts -->
+<script src="vendor/katex/katex.min.js"></script>
+<script src="texlite.js"></script>
+<script src="diff.js"></script>
+<script src="reader.js"></script>
+<!-- /scripts -->
+<script defer src="vendor/alpine/alpine.min.js"></script>
+</head>
+<body x-data="readerApp()" class="reader">
+
+<div class="banner err" x-show="error" x-text="error"></div>
+
+<template x-if="d">
+<div>
+<header>
+  <div class="title"><template x-if="d.title"><span><b x-text="d.title"></b><span class="muted" x-text="' · ledger of paper ' + d.paper"></span></span></template>
+    <template x-if="!d.title"><span>Ledger of paper <b x-text="d.paper"></b></span></template>
+    <span class="muted" x-show="d.project" x-text="' · ' + d.project"></span></div>
+  <div class="chips">
+    <span class="chip" x-text="counts.claims + ' results'"></span>
+    <span class="chip ok" x-text="counts.ok + ' attested'" title="a current attestation: the statement has not changed since"></span>
+    <span class="chip stale" x-show="counts.stale" x-text="counts.stale + ' stale'" title="attested, but the statement or what it rests on changed since"></span>
+    <span class="chip none" x-show="counts.none" x-text="counts.none + ' not attested'"></span>
+    <span class="chip" x-show="counts.hyps" x-text="counts.known + '/' + counts.hyps + ' hypotheses attested as known'"></span>
+  </div>
+</header>
+
+<div class="banner preview">
+  <b>This page shows the ledger; it does not check it.</b>
+  Nothing on it was recomputed in your browser: not the hashes, not the signatures, not the proofs.
+  It was generated on <span x-text="d.generated.slice(0, 10)"></span> from
+  <span x-show="d.git">commit <code x-text="d.git ? d.git.commit.slice(0, 12) : ''"></code></span><span x-show="!d.git">a project outside git</span>,
+  ledger root <code class="root" x-text="d.status.root"></code>.
+  Compare the root with the one printed in the paper.
+  <a href="#view=about" class="ref" @click="view = 'about'">How to check it yourself</a>
+</div>
+<div class="banner warn" x-show="rootMismatch">The paper's generated root file shows <code x-text="d.printed_root"></code>, which differs from this ledger's
+  root: the page and the PDF may describe different states.</div>
+<div class="banner warn" x-show="dirty">Generated from a working tree with <span x-text="d.git ? d.git.dirty_count : 0"></span> uncommitted change(s):
+  the commit above does not contain exactly this ledger.</div>
+<div class="banner err" x-show="!d.status.ok">The ledger reported errors when this page was generated; see the messages below.</div>
+
+<details class="messages" x-show="d.status.messages.length">
+  <summary x-text="d.status.messages.length + ' ledger message(s)'"></summary>
+  <ul><template x-for="m in d.status.messages"><li x-text="m"></li></template></ul>
+</details>
+
+<main>
+  <section class="list">
+    <div class="tabs">
+      <button :class="{on: view === 'claims'}" @click="view = 'claims'">Results</button>
+      <button :class="{on: view === 'hyps'}" @click="view = 'hyps'" x-show="d.status.hypotheses.length">Hypotheses</button>
+      <button :class="{on: view === 'about'}" @click="view = 'about'">About this page</button>
+    </div>
+    <div x-show="view === 'claims'">
+      <div class="toolbar">
+        <select x-model="filter" title="filter">
+          <option value="all">all results</option>
+          <option value="ok">attested</option>
+          <option value="stale">attestation stale</option>
+          <option value="none">not attested</option>
+          <option value="notool">no tool check</option>
+          <option value="toolnotok">a tool check is not ok</option>
+          <option value="hyp">proved given a hypothesis</option>
+          <option value="assessnot">assessment other than consistent</option>
+        </select>
+        <input type="search" x-model="search" placeholder="search name or label">
+        <span class="muted" x-text="rows.length + ' / ' + d.status.claims.length"></span>
+      </div>
+      <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th @click="sortBy('name')">result</th>
+          <th class="opt" @click="sortBy('label')">label</th>
+          <th @click="sortBy('attention')">attestation</th>
+          <th class="opt" @click="sortBy('evidence')" title="evidence type">evid</th>
+          <template x-for="t in d.status.tools"><th class="opt" x-text="t"></th></template>
+          <th class="opt" @click="sortBy('verdict')" title="model assessment of paper vs. formal statement (an aid, not an attestation)">assessment</th>
+        </tr></thead>
+        <tbody>
+          <template x-for="c in rows" :key="c.name">
+            <tr :class="{sel: current === c.name}" @click="go('claim', c.name)">
+              <td class="name" x-text="c.name"></td>
+              <td class="label opt" x-text="c.labels.join(', ')"></td>
+              <td><span class="att" :class="c.attention" x-text="attLabel(c)"></span></td>
+              <td class="opt" x-text="c.evidence" :title="evidenceName(c.evidence)"></td>
+              <template x-for="t in d.status.tools"><td class="opt" :class="toolClass(c, t)" x-text="toolText(c, t)"></td></template>
+              <td class="opt"><span x-show="c.assessment" class="verdict" :class="c.assessment ? verdictClass(c.assessment.verdict) : ''"
+                  x-text="c.assessment ? c.assessment.verdict + (c.assessment.state !== 'current' ? ' (' + c.assessment.state + ')' : '') : ''"></span></td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+      </div>
+    </div>
+    <div x-show="view === 'hyps'" class="hyplist">
+      <p class="muted pad">Results proved <i>given</i> these statements: the formal proof assumes them. A green attestation says the
+        statement is a known theorem.</p>
+      <table>
+        <thead><tr><th>hypothesis</th><th>label</th><th>status</th><th>cites</th></tr></thead>
+        <tbody><template x-for="x in d.status.hypotheses" :key="x.name">
+          <tr :class="{sel: currentHyp === x.name}" @click="go('hyp', x.name)">
+            <td class="name" x-text="x.name"></td><td x-text="x.label || '—'"></td>
+            <td><span class="att" :class="hypClass(x)" x-text="hypStatus(x)"></span></td><td x-text="x.cites.length"></td>
+          </tr></template></tbody>
+      </table>
+    </div>
+    <div x-show="view === 'about'" class="about pad">
+      <h3>What this is</h3>
+      <p>The paper keeps a <i>trust ledger</i>: a record of what each result rests on (formal proofs, computations, data, cited
+        results), which tools checked it, and which named person has attested that it is right. Every item is hashed, and all hashes
+        combine into one <i>root</i>, which is printed in the paper. Change anything and the root changes.</p>
+      <p>This page is a readable view of that record, generated by the authors. It is a preview: it shows what the ledger says, but
+        your browser has not checked any of it.</p>
+      <h3>How to check it yourself</h3>
+      <ol>
+        <li>Get the supplementary data<span x-show="d.supplement">: <span x-text="d.supplement"></span></span><template x-if="repoUrl"><span> (<a class="ref" :href="repoUrl" x-text="repoUrl" target="_blank" rel="noopener noreferrer"></a>)</span></template><span x-show="d.git">, at commit <code x-text="d.git ? d.git.commit : ''"></code></span>.</li>
+        <li>Recompute all hashes and compare them with the root in the paper: <code x-text="d.verify"></code>
+          (Python 3.11 or later, nothing else to install). It must print the root <code class="root" x-text="d.status.root"></code>.</li>
+        <li>To check the tools' results as well (for instance rebuild the Lean proofs), rerun them from the sources:
+          <code>ledger.py extract</code>, <code>ledger.py check</code>, then the same verify command.</li>
+      </ol>
+      <h3>How to read it</h3>
+      <dl>
+        <dt><span class="att ok">green</span></dt><dd>The named person has personally done the checklist and stands behind the result.</dd>
+        <dt><span class="att stale">yellow</span></dt><dd>Convinced and the gap repairable, but would not yet defend it against experts. A reason is recorded.</dd>
+        <dt><span class="att stale">conjecture</span></dt><dd>A claim without proof.</dd>
+        <dt><span class="att stale">stale</span></dt><dd>Attested, but the statement or something it rests on changed since; the attestation no longer counts.</dd>
+        <dt>Attestations do not propagate</dt><dd>A green attestation on a result says the attester checked that the formal statement means
+          what the paper's statement means. The proof, with every lemma it uses, is what the tool checked. What does carry over is listed with
+          the result: the hypotheses it is proved given, and evidence outside the tool's proof check.</dd>
+        <dt>Back-translation</dt><dd>A prose reading of the formal (Lean) statement, written without looking at the paper's statement, so that
+          the two can be compared. Generated; it is part of the record, but it is not an attestation.</dd>
+        <dt>Assessment</dt><dd>A model's comparison of the paper's statement with the back-translation and the formal statement:
+          <template x-for="v in d.vocabulary.verdicts"><span><span class="verdict" :class="verdictClass(v)" x-text="v"></span> </span></template>.
+          An aid for the reader, never an attestation. <i>current</i>: it judged the present statement; <i>outdated</i>: an older one.</dd>
+        <dt>Evidence types</dt><dd><template x-for="e in d.vocabulary.evidence"><span><b x-text="e.id"></b> <span x-text="e.name"></span>; </span></template></dd>
+        <dt x-show="claimChecklist.length">Checklist</dt>
+        <dd x-show="claimChecklist.length"><template x-for="[id, item] in claimChecklist"><div><b x-text="id"></b> <span x-text="item.text"></span></div></template></dd>
+      </dl>
+      <h3>About the data</h3>
+      <p class="muted">Generated <span x-text="d.generated"></span> by trust-ledger-ui <span x-text="d.ui_version"></span> with
+        trust-ledger <span x-text="d.status.ledger_tool"></span> (ledger format <span x-text="d.status.format"></span>, page data format
+        <span x-text="d.export_format"></span>). The page carries the hashes the ledger's lock file holds:
+        <span x-text="lockCounts.nodes"></span> nodes
+        (<template x-for="[k, n] in lockCounts.kinds"><span x-text="k + ' ' + n + ' '"></span></template>), not their content, so it
+        can be compared with a lock file but cannot recompute the root by itself.</p>
+    </div>
+  </section>
+
+  <section class="detail" id="detail-claim" x-show="view === 'claims'">
+    <template x-if="detail">
+      <article>
+        <h2><span x-text="detail.name"></span> <span class="att" :class="detailAttention" x-text="detailAttentionText"></span></h2>
+        <p class="meta">
+          <span x-show="detail.labels.length">label <b x-text="detail.labels.join(', ')"></b> · </span>
+          evidence <b x-text="detail.evidence + ' ' + evidenceName(detail.evidence)"></b>
+          <template x-for="(w, t) in detail.tools"><span> · <span x-text="t"></span> <b x-text="w"></b></span></template>
+          · statement hash <code x-text="detail.bound.slice(0, 12)" :title="detail.bound"></code>
+        </p>
+
+        <h3>Paper statement</h3>
+        <div class="tex" x-html="rendered.statement.html"></div>
+
+        <template x-if="rendered.reading">
+          <div>
+            <h3>Back-translation of the formal statement <small class="muted">(generated)</small></h3>
+            <div class="tex" x-html="rendered.reading.html"></div>
+          </div>
+        </template>
+        <template x-if="detail.extract">
+          <details>
+            <summary>Lean statement <small class="muted" x-text="detail.extract_file"></small></summary>
+            <pre class="lean" x-text="detail.extract"></pre>
+          </details>
+        </template>
+        <p class="renderwarn" x-show="renderIssues.length">
+          <b x-text="renderIssues.length"></b> formula(s) could not be rendered and are shown as source.</p>
+
+        <template x-if="hypsOf(detail).length">
+          <div>
+            <h3>Proved given</h3>
+            <p><template x-for="h in hypsOf(detail)"><span><a class="ref" :href="'#hyp=' + encodeURIComponent(h)" x-text="h"></a>
+              <span class="att" x-show="hypRow(h)" :class="hypRow(h) ? hypClass(hypRow(h)) : ''" x-text="hypRow(h) ? hypStatus(hypRow(h)) : ''"></span> </span></template></p>
+          </div>
+        </template>
+
+        <template x-if="detail.assessment">
+          <div class="assessment">
+            <h3>Assessment <small class="muted">(by a model; an aid, not an attestation)</small></h3>
+            <p><span class="verdict" :class="verdictClass(detail.assessment.verdict)" x-text="detail.assessment.verdict"></span>
+              <span class="muted" x-text="detail.assessment.model + ', ' + detail.assessment.date"></span>
+              <span class="att" :class="{current:'ok', outdated:'none', unbound:'stale'}[detail.assessment.state]" x-text="detail.assessment.state"
+                    :title="{current:'it judged the present statement', outdated:'it judged an older state', unbound:'it does not record what it judged'}[detail.assessment.state]"></span></p>
+            <p class="banner warn" x-show="detail.assessment.state === 'outdated'">Outdated: <span x-text="(detail.assessment.why || []).join('; ')"></span>.
+              The verdict describes an older state.</p>
+            <p class="muted" x-show="detail.assessment.state === 'unbound'">Written before assessments recorded what they judged; it may not fit the present statement.</p>
+            <div class="tex" x-show="rendered.assessment" x-html="rendered.assessment ? rendered.assessment.html : ''"></div>
+          </div>
+        </template>
+
+        <h3>Attestations</h3>
+        <p class="muted" x-show="!detail.attestations.length">none</p>
+        <ul class="plain">
+          <template x-for="a in detail.attestations">
+            <li><span class="att" :class="a.current ? 'ok' : 'stale'" x-text="a.level + (a.current ? '' : ' · stale')"></span>
+              <span x-text="a.person + ', ' + a.date"></span>
+              <template x-if="record(detail.name, 'claim', a)">
+                <span class="muted"> · <span x-text="sigText(record(detail.name, 'claim', a).signature)"></span>
+                  <span x-show="(record(detail.name, 'claim', a).checklist || []).length" x-text="' · checklist ' + (record(detail.name, 'claim', a).checklist || []).join(', ')"></span>
+                  <div class="reason" x-show="record(detail.name, 'claim', a).reason" x-text="record(detail.name, 'claim', a).reason"></div></span>
+              </template></li>
+          </template>
+        </ul>
+
+        <template x-if="diffView">
+          <div class="diffbox">
+            <h3>What changed since the attestation</h3>
+            <p class="muted" x-show="diffView.att">Compared with the attestation <b x-text="diffView.att ? diffView.att.level : ''"></b> by
+              <b x-text="diffView.att ? diffView.att.person : ''"></b> on <span x-text="diffView.att ? diffView.att.date : ''"></span>.</p>
+            <p class="banner warn" x-show="diffView.unverified">Rebuilt from the git history and <b>not verified</b> against the attested hash;
+              only the statement text is compared.</p>
+            <p class="muted" x-show="!diffView.available" x-text="diffView.reason"></p>
+            <template x-if="diffView.available && !diffView.current">
+              <div>
+                <p x-show="!diffView.textChanged" class="muted">The statement text is unchanged.</p>
+                <div x-show="diffView.textChanged" class="diff" x-html="diffView.textHtml"></div>
+                <template x-for="u in diffView.uses" :key="u.name">
+                  <div><b>uses </b><a class="ref" :href="'#claim=' + encodeURIComponent(u.name)" x-text="u.name"></a> <span class="muted" x-text="u.change"></span>
+                    <div class="diff" x-show="u.html" x-html="u.html"></div></div>
+                </template>
+                <template x-for="n in diffView.nodes" :key="n.id">
+                  <details class="node">
+                    <summary><code x-text="n.id"></code> <span class="att stale" x-text="n.change"></span>
+                      <span class="muted" x-show="n.same">a dependency of it changed</span></summary>
+                    <template x-for="f in n.fields" :key="f.key"><div><b x-text="f.key"></b><div class="diff" x-html="f.html"></div></div></template>
+                  </details>
+                </template>
+              </div>
+            </template>
+          </div>
+        </template>
+
+        <h3>Uses / used by</h3>
+        <p>
+          <span class="muted" x-show="!detail.uses.length && !detail.used_by.length">nothing</span>
+          <template x-for="u in detail.uses"><a class="ref" :href="'#claim=' + encodeURIComponent(u)" x-text="'↑ ' + u"></a></template>
+          <template x-for="u in detail.used_by"><a class="ref" :href="'#claim=' + encodeURIComponent(u)" x-text="'↓ ' + u"></a></template>
+        </p>
+        <details>
+          <summary>Rests on <span class="muted" x-text="'(' + detail.rests_on.length + ' items)'"></span></summary>
+          <table class="small"><template x-for="r in detail.rests_on"><tr><td x-text="r.provenance"></td><td x-text="r.id"></td></tr></template></table>
+        </details>
+      </article>
+    </template>
+    <p class="muted pad" x-show="!detail">Select a result to read its statement, the back-translation of its formal version and who attested it.</p>
+  </section>
+
+  <section class="detail" id="detail-hyp" x-show="view === 'hyps'">
+    <template x-if="hypDetail">
+      <article>
+        <h2><span x-text="hypDetail.name"></span> <span class="att" x-show="hypRow(hypDetail.name)" :class="hypClass(hypRow(hypDetail.name) || {attestations: []})"
+            x-text="hypStatus(hypRow(hypDetail.name) || {attestations: []})"></span></h2>
+        <p class="meta"><span x-show="hypDetail.label">label <b x-text="hypDetail.label"></b> · </span>
+          statement from <b x-text="hypDetail.source"></b> · hash <code x-text="hypDetail.bound.slice(0, 12)" :title="hypDetail.bound"></code></p>
+        <h3>Statement</h3>
+        <div class="tex" x-html="hypRendered.html"></div>
+        <h3>Cited sources</h3>
+        <p class="muted" x-show="!hypDetail.cites.length">none recorded</p>
+        <ul class="plain"><template x-for="c in hypDetail.cites" :key="c.key">
+          <li><b x-text="c.key"></b>
+            <template x-if="c.source && /^https?:\/\//.test(c.source)"><a class="ref" :href="c.source" target="_blank" rel="noopener noreferrer" x-text="c.source"></a></template>
+            <span x-show="c.source && !/^https?:\/\//.test(c.source)" x-text="c.source"></span></li></template></ul>
+        <h3>Attestations</h3>
+        <p class="muted" x-show="!hypDetail.attestations.length">none</p>
+        <ul class="plain"><template x-for="a in hypDetail.attestations">
+          <li><span class="att" :class="a.current ? 'ok' : 'stale'" x-text="a.level + (a.current ? '' : ' · stale')"></span>
+            <span x-text="a.person + ', ' + a.date"></span>
+            <template x-if="record(hypDetail.name, 'hypothesis', a)">
+              <span class="muted"> · <span x-text="sigText(record(hypDetail.name, 'hypothesis', a).signature)"></span>
+                <span x-show="(record(hypDetail.name, 'hypothesis', a).checklist || []).length"
+                      x-text="' · checklist ' + (record(hypDetail.name, 'hypothesis', a).checklist || []).join(', ')"></span></span>
+            </template></li></template></ul>
+        <h3>Results proved given it</h3>
+        <p><span class="muted" x-show="!hypDetail.used_by.length">none</span>
+          <template x-for="n in hypDetail.used_by"><a class="ref" :href="'#claim=' + encodeURIComponent(n)" x-text="n"></a></template></p>
+      </article>
+    </template>
+    <p class="muted pad" x-show="!hypDetail">Select a hypothesis.</p>
+  </section>
+
+  <section class="detail" x-show="view === 'about'">
+    <p class="muted pad">The root of this page: <code class="root" x-text="d.status.root"></code></p>
+    <p class="muted pad" x-show="d.printed_root && !rootMismatch">It matches the root file generated for the paper.</p>
+  </section>
+</main>
+</div>
+</template>
+</body>
+</html>

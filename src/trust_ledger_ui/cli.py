@@ -32,13 +32,37 @@ def init(ledger_file: Path) -> int:
     return 0
 
 
+def export(project: Project, out: Path, papers: list[str], repo: str | None) -> int:
+    from .core.export import ExportError, export_site
+    if repo and not repo.startswith("https://"):
+        print("ledger-ui: --repo must be an https:// URL (it is shown to readers as a link)", file=sys.stderr)
+        return 2
+    try:
+        entries = export_site(project, out, papers, repo=repo)
+    except ExportError as e:
+        print(f"ledger-ui: {e}", file=sys.stderr)
+        return 2
+    for e in entries:
+        print(f"{out / e['file']}  root {e['root']}")
+        for w in e["warnings"]:
+            print(f"  warning: {w}", file=sys.stderr)
+    print(f"{out / 'index.html'}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="ledger-ui", description=__doc__)
     ap.add_argument("--config", help="ledger-ui.toml (default: ./ledger-ui.toml, then ~/.config/trust-ledger-ui/config.toml)")
     ap.add_argument("--no-browser", action="store_true", help="do not open the browser (overrides [server] open_browser)")
     ap.add_argument("--init", metavar="LEDGER_TOML", help=f"write a {CONFIG_NAME} for this ledger/ledger.toml into the current directory and exit")
     ap.add_argument("--summary", action="store_true", help="print the papers with their counts and exit (no server)")
+    ap.add_argument("--export", metavar="DIR", help="write a static read-only page per paper (DIR/<paper>.html, self-contained) "
+                    "and DIR/index.html, for referees and readers, and exit (no server)")
+    ap.add_argument("--paper", action="append", default=[], help="with --export: only this paper (repeatable; default: all)")
+    ap.add_argument("--repo", metavar="URL", help="with --export: the public https URL of the project's repository, shown on the page")
     args = ap.parse_args(argv)
+    if (args.paper or args.repo) and not args.export:
+        ap.error("--paper and --repo go with --export")
     if args.init:
         return init(Path(args.init))
     try:
@@ -50,6 +74,8 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"{p.name:12} claims {c['claims']:3}  none {c['none']:3}  stale {c['stale']:3}  "
                       f"green {c['green']:3}  yellow {c['yellow']:3}  hypotheses open {c['hypotheses_open']}/{c['hypotheses']}")
             return 0
+        if args.export:
+            return export(project, Path(args.export), args.paper, args.repo)
     except (ConfigError, ToolError) as e:
         print(f"ledger-ui: {e}", file=sys.stderr)
         return 2

@@ -41,6 +41,7 @@ nav:
       - Review packs: review-packs.md
       - Background jobs: jobs.md
       - Snapshots and diffs: snapshots.md
+      - A page for referees and readers: sharing.md
   - Reference:
       - Configuration: configuration.md
       - From another device: remote.md

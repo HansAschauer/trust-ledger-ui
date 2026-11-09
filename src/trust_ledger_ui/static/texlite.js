@@ -92,7 +92,9 @@
           else if (d !== undefined && '&%_#${}'.includes(d)) buf += d;
           else if (d === ' ' || d === ',' || d === ';' || d === ':' || d === '!') buf += d === '!' ? '' : ' ';
           else if (d !== undefined) emit('<span class="unk">\\' + esc(d) + '</span>');
-          i += 2; continue;
+          i += 2;
+          if (d !== '\\' && s.startsWith('{}', i)) i += 2;   // Pandoc writes \_{} : the empty group only ends the symbol
+          continue;
         }
         const name = m[1];
         let j = m.index + m[0].length;
@@ -149,6 +151,11 @@
         if (Object.prototype.hasOwnProperty.call(SYMBOL, name)) {
           buf += SYMBOL[name];
           if (s.startsWith('{}', j)) j += 2;
+          i = j; continue;
+        }
+        if (/^(itemsep|parsep|parskip|topsep|partopsep|parindent)$/.test(name)) {   // a length setting: \itemsep0pt, \parskip=2pt
+          const lm = /\s*=?\s*-?[0-9.]+\s*(pt|em|ex|mm|cm|in|bp|sp|mu)?(\s*plus\s*[0-9.]+\s*\w*)?(\s*minus\s*[0-9.]+\s*\w*)?/y;
+          lm.lastIndex = j; const mm = lm.exec(s); if (mm) j += mm[0].length;
           i = j; continue;
         }
         if (IGNORE.has(name)) { if (name === 'hspace' || name === 'vspace') arg(); i = j; continue; }

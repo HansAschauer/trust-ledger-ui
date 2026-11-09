@@ -10,7 +10,8 @@ reason) with an ssh-agent signature.
 
 Non-goals: no editing of claims, citations or assertions (hand-edited TOML stays hand-edited); no
 verification logic of its own (that is `ledger.py verify`); no storage of ledger state outside the ledger's
-own files; no multi-user server (one person, one machine, 127.0.0.1).
+own files; no multi-user server (one person, one machine, 127.0.0.1). The one exception to "local only" is the
+static read-only page of section 16, which is written to files and has no server at all.
 
 ## 2. Architecture
 
@@ -265,3 +266,37 @@ for the first milestones.
 
 - `\mathbb{1}` for `\mathds{1}` looks different in KaTeX; check by eye at milestone 1.
 - Several projects in one config (list of `[[ledger]]`): the schema leaves room, not in the first version.
+
+## 16. Static read-only page (export)
+
+For referees and readers who want to see what a paper's ledger records before installing anything.
+`ledger-ui --export DIR [--paper NAME]... [--repo URL]` writes `DIR/<paper>.html` per paper and `DIR/index.html`,
+and exits; no server runs. Code: `core/export.py`, page: `static/reader.html`, `reader.js`, `reader.css`.
+
+- **Self-contained.** Each page inlines its data (one `<script type="application/json" id="ledger-data">` block),
+  the scripts (KaTeX, Alpine.js, `texlite.js`, `diff.js`, `reader.js`), the styles and the KaTeX `.woff2` fonts as
+  `data:` URIs. It works from disk (`file://`), from any web server and from GitHub Pages, and loads nothing from
+  the network. About 1.5 MB for a paper with 30 results.
+- **A preview, not a check.** The page recomputes no hash and checks no signature, and says so in a banner that is
+  always shown, with the root, the commit and the command that does check (`[paper.<name>] verify` in
+  `ledger.toml`, as in the paper's appendix). Signature states are shown as `ledger.py` found them when the page
+  was generated, and labelled that way.
+- **Read-only.** No attesting, no jobs, no "seen" marks, no storage. The address carries the selection
+  (`#claim=NAME`, `#hyp=NAME`, `#view=about`), so a link can point at one result.
+- **Data** (`EXPORT_FORMAT` 0.1): `status_data()` (without author-facing notes), `claim_detail` of every claim,
+  `hypothesis_detail` of every hypothesis, `diff_since` for every stale attestation, the attestation records as
+  written (reason, checklist, signature, signature state), the vocabulary (evidence types, checklist, levels,
+  verdicts, public keys), the paper's KaTeX macros, `lock()` (node kinds and full hashes, claim and hypothesis
+  spec hashes, the root), the git commit and uncommitted tracked files, the root in the generated
+  `ledger-<paper>-root.tex`, generation time and versions. Paths are relative to the project root. The node
+  payloads are not included (17 MB for one of our papers, mostly Lean terms), so the page cannot recompute the
+  root by itself; a later version can compare the node hashes with a lock file or recompute the tree above them.
+- **Warnings** at export time (printed, and shown on the page): the generated root file shows a different root
+  than the ledger (the PDF and the page would disagree), there is no generated root file, tracked files have
+  uncommitted changes, the ledger reports errors.
+- **Safety of the inlined data.** In the JSON block every `<` is written as `\u003c`, so no text from the ledger can
+  end the element; inlined scripts have `</script` escaped. Texts are rendered by `texlite.js`, which escapes
+  everything it does not turn into markup.
+- **Later:** recompute the root in the browser (WebCrypto SHA-256 over canonical JSON) and check the SSH
+  signatures (Ed25519), once someone asks for it; the data block already carries the hashes, signatures and keys.
+

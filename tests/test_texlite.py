@@ -57,3 +57,15 @@ def test_katex_gaps_are_shimmed():
 def test_html_is_escaped():
     [r] = run("<script>alert(1)</script> & \\textless{}")
     assert "<script>" not in r["html"] and "&lt;script&gt;" in r["html"]
+
+
+def test_empty_group_after_control_symbol():
+    """Pandoc writes `exactalt\\_{}converse`; the empty group only ends the symbol and must not show."""
+    [r] = run(r"\texttt{exactalt\_{}converse} and 5\%{} of a\_b")
+    assert "exactalt_converse" in r["html"] and "{}" not in r["html"] and "a_b" in r["html"]
+
+
+def test_list_spacing_settings_are_dropped():
+    [r] = run(r"\begin{itemize}\itemsep0pt \item one \item two\end{itemize} and \parskip=2pt plus 1pt after")
+    assert r["unknown"] == [] and "itemsep" not in r["html"] and "0pt" not in r["html"] and "2pt" not in r["html"]
+    assert r["html"].count("<li>") == 2 and "after" in r["html"]
