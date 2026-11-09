@@ -51,7 +51,7 @@
 
 <div class="banner warn" x-show="changed">Files changed on disk since this was loaded. <button @click="reload()">Reload now</button></div>
 <div class="banner err" x-show="error" x-text="error"></div>
-<div class="banner info" x-show="data && data.stale_unsnapshotted && data.stale_unsnapshotted.length" x-cloak>
+<div class="banner info stalesnap" x-show="data && data.stale_unsnapshotted && data.stale_unsnapshotted.length" x-cloak>
   <b x-text="data ? data.stale_unsnapshotted.length : 0"></b> stale attestation(s) have no snapshot, so what changed cannot be shown.
   If the project is in git, it can be rebuilt from the history.
   <button @click="recoverFromGit(false)" :disabled="recovering" title="exact: only what reproduces the attested hash is kept">Rebuild from git</button>
@@ -59,7 +59,7 @@
   <span class="muted" x-show="recovering">working (the project is loaded once per commit)…</span>
   <span x-show="recoverMsg" x-text="recoverMsg"></span>
 </div>
-<div class="banner info" x-show="data && data.unsnapshotted && data.unsnapshotted.length" x-cloak>
+<div class="banner info nosnap" x-show="data && data.unsnapshotted && data.unsnapshotted.length" x-cloak>
   <b x-text="data ? data.unsnapshotted.length : 0"></b> current attestation(s) have no snapshot of what they bind to, so a later change
   cannot be shown as a diff. <button @click="recordSnapshots()" title="writes ledger/snapshots/&lt;bound&gt;.json (not hashed, not part of the root)">Record snapshots now</button>
 </div>

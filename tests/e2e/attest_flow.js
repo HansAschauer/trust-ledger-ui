@@ -12,9 +12,9 @@ const OUT = process.argv[2], PORT = process.argv[3], TOKEN = process.argv[4];
   await page.goto('http://127.0.0.1:' + PORT + '/?paper=egg#' + TOKEN);
   await page.waitForSelector('table tbody tr');
   // attestations that were made before snapshots existed: the page offers to record them
-  console.log('snapshot banner at start:', await page.locator('.banner.info').isVisible());
-  await page.click('.banner.info button');
-  await page.waitForSelector('.banner.info', { state: 'hidden', timeout: 30000 });
+  console.log('snapshot banner at start:', await page.locator('.banner.info.nosnap').isVisible());
+  await page.click('.banner.info.nosnap button');
+  await page.waitForSelector('.banner.info.nosnap', { state: 'hidden', timeout: 30000 });
   console.log('snapshots recorded, banner gone');
   await page.selectOption('select[title=filter]', 'all');
   await page.click('tbody tr:has-text("scaling")');
