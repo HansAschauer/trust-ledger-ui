@@ -1,6 +1,7 @@
 /* The page: one Alpine component. All state lives on the server (the ledger's own files); this only displays it. */
 function ledgerApp() {
   const ORDER = { none: 0, stale: 1, ok: 2 };
+  const VERDICT = { consistent: 'ok', partial: 'stale', check: 'stale', mismatch: 'none', unclear: 'stale' };
   return {
     token: '', overview: { papers: [], project: '', person: '', key: '' }, scope: '', data: null,
     loading: false, error: '', changed: false,
@@ -85,11 +86,13 @@ function ledgerApp() {
       });
       const k = this.sortKey, d = this.sortDir;
       r.sort((a, b) => {
-        const x = k === 'attention' ? ORDER[a.attention] : a[k], y = k === 'attention' ? ORDER[b.attention] : b[k];
+        const key = (c) => k === 'attention' ? ORDER[c.attention] : k === 'verdict' ? (c.assessment ? c.assessment.verdict : '~') : c[k];
+        const x = key(a), y = key(b);
         return (x < y ? -1 : x > y ? 1 : a.name < b.name ? -1 : 1) * d;
       });
       return r;
     },
+    verdictClass(v) { return VERDICT[v] || 'stale'; },
     sortBy(k) { if (this.sortKey === k) this.sortDir = -this.sortDir; else { this.sortKey = k; this.sortDir = 1; } },
     attLabel(c) {                                      // a current attestation is the one that counts; else the first stale one
       if (!c.attestations.length) return 'none';

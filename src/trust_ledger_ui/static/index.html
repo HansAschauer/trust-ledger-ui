@@ -117,6 +117,7 @@
         <th class="opt" @click="sortBy('statement')">stmt</th>
         <template x-for="t in (data ? data.tools : [])"><th class="opt" x-text="t"></th></template>
         <th class="opt" @click="sortBy('register')" title="size of the register">reg</th>
+        <th class="opt" @click="sortBy('verdict')" title="model assessment of paper vs. formal statement (an aid, not an attestation)">assessment</th>
       </tr></thead>
       <tbody>
         <template x-for="c in rows" :key="c.name">
@@ -128,6 +129,8 @@
             <td class="opt" x-text="c.statement"></td>
             <template x-for="t in data.tools"><td class="opt" :class="toolClass(c, t)" x-text="toolText(c, t)"></td></template>
             <td class="opt" x-text="c.register"></td>
+            <td class="opt"><span x-show="c.assessment" class="verdict" :class="c.assessment ? verdictClass(c.assessment.verdict) : ''"
+                x-text="c.assessment ? c.assessment.verdict + (c.assessment.state !== 'current' ? ' (' + c.assessment.state + ')' : '') : ''"></span></td>
           </tr>
         </template>
       </tbody>

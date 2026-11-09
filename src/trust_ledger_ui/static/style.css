@@ -32,6 +32,11 @@ td.name { font-weight:600; }
 td.bad { color:var(--none); } td.warn { color:var(--stale); }
 .att { display:inline-block; padding:0 .5rem; border-radius:4px; font-size:.82rem; border:1px solid currentColor; }
 .att.none { color:var(--none); } .att.stale { color:var(--stale); } .att.ok { color:var(--ok); }
+/* model assessment verdicts (claims table of both pages) */
+.verdict { display:inline-block; padding:0 .45rem; border-radius:4px; font-size:.82rem; }
+.verdict.ok { background:color-mix(in srgb, var(--ok) 15%, transparent); color:var(--ok); }
+.verdict.stale { background:color-mix(in srgb, var(--stale) 15%, transparent); color:var(--stale); }
+.verdict.none { background:color-mix(in srgb, var(--none) 15%, transparent); color:var(--none); }
 h2 { margin:.8rem 0 .2rem; font-size:1.25rem; } h3 { margin:1.1rem 0 .3rem; font-size:1rem; border-bottom:1px solid var(--line); padding-bottom:.15rem; }
 .meta { color:var(--muted); font-size:.88rem; margin:.2rem 0; }
 .tex { overflow-x:auto; }
