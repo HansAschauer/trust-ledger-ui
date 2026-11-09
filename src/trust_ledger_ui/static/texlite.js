@@ -169,6 +169,7 @@
         while (j < n && (s[j] !== '$' || s[j - 1] === '\\')) j++;
         if (j < n) { emit(render(s.slice(i + 1, j), false, ctx)); i = j + 1; continue; }
       }
+      if (c === '{' || c === '}') { i++; continue; }   // a bare group (\allowbreak{}, {\em x}) is invisible in LaTeX
       buf += c; i++;
     }
     while (lists.length) { const l = lists.pop(); emit((l.first ? '' : '</li>') + '</' + l.tag + '>'); }

@@ -69,3 +69,10 @@ def test_list_spacing_settings_are_dropped():
     [r] = run(r"\begin{itemize}\itemsep0pt \item one \item two\end{itemize} and \parskip=2pt plus 1pt after")
     assert r["unknown"] == [] and "itemsep" not in r["html"] and "0pt" not in r["html"] and "2pt" not in r["html"]
     assert r["html"].count("<li>") == 2 and "after" in r["html"]
+
+
+def test_bare_groups_are_invisible():
+    """Pandoc writes `depolN\\_\\allowbreak{}tprod`; a bare {...} group shows no braces, an escaped \\{ does."""
+    [r] = run(r"\texttt{depolN\_\allowbreak{}tprod} and {grouped} text, a set \{x\}")
+    assert "depolN_tprod" in r["html"] and "grouped text" in r["html"] and "{x}" in r["html"]
+    assert "{}" not in r["html"] and "{grouped}" not in r["html"]
