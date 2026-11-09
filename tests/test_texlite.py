@@ -76,3 +76,13 @@ def test_bare_groups_are_invisible():
     [r] = run(r"\texttt{depolN\_\allowbreak{}tprod} and {grouped} text, a set \{x\}")
     assert "depolN_tprod" in r["html"] and "grouped text" in r["html"] and "{x}" in r["html"]
     assert "{}" not in r["html"] and "{grouped}" not in r["html"]
+
+
+def test_pandoc_enumerate_labels():
+    """pandoc writes \\def\\labelenumi{(\\roman{enumi})} and \\setcounter{enumi}{1} for a list that starts at (ii)."""
+    [r] = run(r"\begin{enumerate} \def\labelenumi{(\roman{enumi})} \setcounter{enumi}{1} \tightlist \item two \item three"
+              r"\end{enumerate} \begin{enumerate} \def\labelenumi{(\alph{enumi})} \item first \end{enumerate}"
+              r" \begin{enumerate} \def\labelenumi{\arabic{enumi}.} \item plain \end{enumerate}")
+    h = " ".join(r["html"].split())
+    assert ">(ii)</span> two" in h and ">(iii)</span> three" in h and ">(a)</span> first" in h
+    assert "<li> plain" in h and "labelenumi" not in h and r["unknown"] == []

@@ -25,6 +25,14 @@
   const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' };
   const esc = (s) => s.replace(/[&<>"]/g, (c) => ESC[c]);
 
+  /* pandoc's enumerate labels: \def\labelenumi{(\roman{enumi})} with the item number n */
+  function roman(n) { let r = ''; for (const [v, t] of [[1000, 'm'], [900, 'cm'], [500, 'd'], [400, 'cd'], [100, 'c'], [90, 'xc'], [50, 'l'], [40, 'xl'], [10, 'x'], [9, 'ix'], [5, 'v'], [4, 'iv'], [1, 'i']]) while (n >= v) { r += t; n -= v; } return r; }
+  function enumLabel(tpl, n) {
+    return tpl.replace(/\\(arabic|roman|Roman|alph|Alph)\{enum[iv]+\}/g, (_, f) =>
+      f === 'arabic' ? String(n) : f === 'roman' ? roman(n) : f === 'Roman' ? roman(n).toUpperCase()
+        : f === 'alph' ? String.fromCharCode(96 + n) : String.fromCharCode(64 + n));
+  }
+
   function stripComments(s) { return s.replace(/(^|[^\\])%.*$/gm, '$1'); }
 
   /* index just after the balanced {...} group that starts at s[i] === '{'; -1 if unbalanced */
@@ -114,7 +122,7 @@
             if (e >= 0) { emit(render('\\begin{' + env + '}' + s.slice(j, e) + endTag, true, ctx)); i = e + endTag.length; continue; }
           }
           if (base === 'itemize' || base === 'enumerate') {
-            if (name === 'begin') { lists.push({ tag: base === 'itemize' ? 'ul' : 'ol', first: true }); emit('<' + lists[lists.length - 1].tag + '>'); }
+            if (name === 'begin') { lists.push({ tag: base === 'itemize' ? 'ul' : 'ol', first: true, n: 0, label: null }); emit('<' + lists[lists.length - 1].tag + '>'); }
             else { const l = lists.pop(); if (l) emit((l.first ? '' : '</li>') + '</' + l.tag + '>'); }
           } else if (name === 'begin' && /^(theorem|lemma|proposition|corollary|remark|definition|example|proof|conjecture|claim|assumption)$/.test(base)) {
             let title = ''; if (s[j] === '[') { const e = s.indexOf(']', j); if (e > 0) { title = ' (' + s.slice(j + 1, e) + ')'; j = e + 1; } }
@@ -132,7 +140,13 @@
         if (HEAD[name]) { const a = arg(); if (a !== null) { const t = HEAD[name]; emit('</p><' + t + '>' + parse(a, ctx).html + '</' + t + '><p>'); i = j; continue; } }
         if (name === 'item') {
           const l = lists[lists.length - 1];
-          if (l) { emit((l.first ? '' : '</li>') + '<li>'); l.first = false; }
+          if (l) {
+            l.n++;
+            const lab = l.tag === 'ol' && l.label ? enumLabel(l.label, l.n) : null;
+            emit((l.first ? '' : '</li>') + (lab !== null ? '<li class="lbl"><span class="enumlbl">' + esc(lab) + '</span> '
+                                                           : l.moved ? '<li value="' + l.n + '">' : '<li>'));
+            l.first = false;
+          }
           i = j; continue;
         }
         if (name === 'label' || name === 'index' || name === 'nonumber' || name === 'notag') { arg(); i = j; continue; }
@@ -142,11 +156,20 @@
         }
         if (name === 'footnote' || name === 'footnotetext') { const a = arg(); emit('<span class="fn"> [' + parse(a || '', ctx).html + ']</span>'); i = j; continue; }
         if (name === 'texorpdfstring') { const a = arg(); arg(); if (a !== null) { emit(parse(a, ctx).html); i = j; continue; } }
-        if (name === 'def') {                       // \def\name#1{...}: Pandoc's list numbering; nothing to show
-          cmd.lastIndex = j; const dm = cmd.exec(s); if (dm) { j = dm.index + dm[0].length; while (s[j] === '#' || /[0-9]/.test(s[j] || '')) j++; arg(); }
+        if (name === 'def') {                       // \def\name#1{...}: pandoc's list labels (\labelenumi); else nothing to show
+          cmd.lastIndex = j; const dm = cmd.exec(s);
+          if (dm) {
+            j = dm.index + dm[0].length; while (s[j] === '#' || /[0-9]/.test(s[j] || '')) j++;
+            const body = arg(), l = lists[lists.length - 1];
+            if (/^labelenum[iv]+$/.test(dm[1]) && body !== null && l && l.tag === 'ol' && body.trim() !== '\\arabic{' + dm[1].slice(5) + '}.') l.label = body;
+          }
           i = j; continue;
         }
-        if (name === 'setcounter' || name === 'addtocounter') { arg(); arg(); i = j; continue; }
+        if (name === 'setcounter' || name === 'addtocounter') {   // \setcounter{enumi}{1}: the next \item is number 2
+          const c = arg(), v = parseInt(arg() || '', 10), l = lists[lists.length - 1];
+          if (l && l.tag === 'ol' && /^enum[iv]+$/.test(c || '') && !isNaN(v)) { l.n = name === 'setcounter' ? v : l.n + v; l.moved = true; }
+          i = j; continue;
+        }
         if (name === 'par') { emit('</p><p>'); i = j; continue; }
         if (Object.prototype.hasOwnProperty.call(SYMBOL, name)) {
           buf += SYMBOL[name];

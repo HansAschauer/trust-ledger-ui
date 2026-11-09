@@ -32,6 +32,8 @@ td.name { font-weight:600; }
 td.bad { color:var(--none); } td.warn { color:var(--stale); }
 .att { display:inline-block; padding:0 .5rem; border-radius:4px; font-size:.82rem; border:1px solid currentColor; }
 .att.none { color:var(--none); } .att.stale { color:var(--stale); } .att.ok { color:var(--ok); }
+/* enumerate items with pandoc's own labels, e.g. (ii) */
+li.lbl { list-style:none; } li.lbl > .enumlbl { display:inline-block; min-width:2.2em; margin-left:-2.2em; }
 /* model assessment verdicts (claims table of both pages) */
 .verdict { display:inline-block; padding:0 .45rem; border-radius:4px; font-size:.82rem; }
 .verdict.ok { background:color-mix(in srgb, var(--ok) 15%, transparent); color:var(--ok); }
