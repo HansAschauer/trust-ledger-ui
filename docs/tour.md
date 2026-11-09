@@ -21,7 +21,9 @@ The counts:
 
 **Claim list** (left). Tabs *Claims* and *Hypotheses*. For claims: a filter (the default is *needs attention*: none plus
 stale), a search over names and labels, and columns for the attestation, the evidence class, where the statement comes from
-(`tex` or `manual`), the state of each tool (for example Lean) and the size of the register. Click a column header to sort.
+(`tex` or `manual`), the state of each tool (for example Lean), the size of the register, and the model assessment of paper against formal
+statement (`consistent`, `partial`, …, with *outdated* or *unbound* added when it does not judge the present state; an aid,
+not an attestation). Click a column header to sort.
 On a narrow screen only the claim and its attestation are shown.
 
 **Detail** (right). The paper statement, the back-translation of the formal statement and the Lean statement if the project

@@ -18,8 +18,8 @@ const shot = async (page, name, target, clip) => {
 
   // 01: the first look; attestations from before snapshots existed are offered a snapshot
   await shot(page, '01-overview', null, { x: 0, y: 0, width: 1360, height: 520 });
-  await page.click('.banner.info button');
-  await page.waitForSelector('.banner.info', { state: 'hidden', timeout: 30000 });
+  await page.click('.banner.info.nosnap button');
+  await page.waitForSelector('.banner.info.nosnap', { state: 'hidden', timeout: 30000 });
 
   // 02: one claim in detail
   await page.selectOption('select[title=filter]', 'all');
